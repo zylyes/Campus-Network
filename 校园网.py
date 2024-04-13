@@ -106,13 +106,13 @@ def load_or_create_config():
     default_config = {  # 默认配置信息
         "api_url": "http://172.21.255.105:801/eportal/",  # API接口URL
         "icons": {  # 图标文件路径
-            "already": "./ico/网络.ico",
+            "already": "./ico/Internet.ico",
             "success": "./ico/Check.ico",
             "fail": "./ico/Cross.ico",
             "unknown": "./ico/Questionmark.ico"
         },
         "auto_login": False,  # 自动登录是否启用，默认关闭
-        "isp": "telecom",  # 连接的ISP（Internet Service Provider）服务提供商，默认为电信
+        "isp": "campus",  # 连接的ISP（Internet Service Provider）服务提供商，默认为校园网
         "auto_start": False  # 是否开机自启，默认关闭
     }
     with config_lock:  # 使用配置锁
@@ -143,8 +143,8 @@ class CampusNetLoginApp:
         self.eye_closed_icon = tk.PhotoImage(file="./ico/eye_closed.png")  # 导入眼睛图标-关闭状态
         self.password_visible = False  # 跟踪密码是否可见的标志
 
-        # 初始化ISP下拉列表的变量，并使用配置文件中的ISP设置，如果没有则默认为"telecom"
-        self.isp_var = tk.StringVar(value=self.config.get("isp", "telecom"))
+        # 初始化ISP下拉列表的变量，并使用配置文件中的ISP设置，如果没有则默认为"campus"
+        self.isp_var = tk.StringVar(value=self.config.get("isp", "campus"))
 
         self.show_ui = show_ui  # 是否显示UI界面的标志
         if show_ui:
@@ -193,8 +193,8 @@ class CampusNetLoginApp:
         logging.info(f"保存凭据：用户名 {username}, 记住密码：{'是' if remember else '否'}, 运营商：{self.isp_var.get()}")  # 记录保存凭据的信息
 
         # 保存运营商选择
-        isp_reverse_mapping = {"中国电信": "telecom", "中国移动": "cmcc", "中国联通": "unicom"}  # 定义运营商映射关系
-        self.config["isp"] = isp_reverse_mapping.get(self.isp_var.get(), "telecom")  # 获取用户选择的运营商映射值，默认为中国电信
+        isp_reverse_mapping = {"中国电信": "telecom", "中国移动": "cmcc", "中国联通": "unicom", "campus": "校园网"}  # 定义运营商映射关系
+        self.config["isp"] = isp_reverse_mapping.get(self.isp_var.get(), "campus")  # 获取用户选择的运营商映射值，默认为校园网
         save_config(self.config)  # 保存配置信息
 
     def load_credentials(self):
@@ -206,12 +206,12 @@ class CampusNetLoginApp:
                 # 获取用户名和解密后的密码
                 username = credentials['username']
                 password = self.cipher_suite.decrypt(credentials['password']).decode()
-                isp = credentials.get('isp', 'telecom')  # 默认运营商为电信
+                isp = credentials.get('isp', 'campus')  # 默认运营商为校园网
                 remember = credentials.get('remember', False)  # 默认不记住密码
                 return username, password, isp, remember
         except FileNotFoundError:
             # 若文件未找到，则返回空值
-            return '', '', 'telecom', False
+            return '', '', 'campus', False
 
     def clear_saved_credentials(self):
         try:
@@ -251,8 +251,8 @@ class CampusNetLoginApp:
     def perform_login(self, username, password, auto=False):
         logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")
         # 运营商标识映射
-        isp_codes = {"中国电信": "@telecom", "中国移动": "@cmcc", "中国联通": "@unicom"}
-        selected_isp_code = isp_codes.get(self.isp_var.get(), "@telecom")  # 默认为电信
+        isp_codes = {"中国电信": "@telecom", "中国移动": "@cmcc", "中国联通": "@unicom", "校园网": "@campus"}
+        selected_isp_code = isp_codes.get(self.isp_var.get(), "@campus")  # 默认为校园网
 
         logging.info(f"尝试登录：用户名 {username}，运营商：{self.isp_var.get()}，密码已提交")
         remember = self.remember_var.get() == 1 if not auto else True
@@ -299,7 +299,7 @@ class CampusNetLoginApp:
                     if self.show_ui:  # 如果允许显示UI，则重启UI流程
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，密码错误，请重新尝试。"))
-                elif "userid error" in decoded_message:
+                elif "userid error1" in decoded_message:
                     # 在这里记录错误账号和运营商
                     logging.warning(f"账号或运营商错误，尝试的错误账号为：{username}，错误运营商为：{self.isp_var.get()}")
                     self.master.after(0, lambda: self.show_notification("登录失败", "账号或运营商错误，请重新尝试", self.config['icons']['fail']))
@@ -310,7 +310,7 @@ class CampusNetLoginApp:
                     if self.show_ui:  # 如果允许显示UI，则重启UI流程
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，账号或运营商错误，请重新尝试。"))
-                elif "Rad:Opp" in decoded_message:
+                elif "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]" in decoded_message or "Reject by concurrency control" in decoded_message:
                     logging.warning("当前在线设备超过两个")
                     self.master.after(0, lambda: webbrowser.open("http://172.30.1.100:8080/Self/login/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "当前在线设备超过两个，请退出部分设备后重新尝试", self.config['icons']['fail']))
@@ -318,6 +318,77 @@ class CampusNetLoginApp:
                     if self.show_ui:  # 如果允许显示UI，则重启UI流程
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，当前在线设备超过两个，请退出部分设备后重新尝试。"))
+                elif "The subscriber status is incorrect" in decoded_message:
+                    logging.warning("手机欠费停机或宽带到期")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "手机欠费停机或宽带到期，请及时充值或续费", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，手机欠费停机或宽带到期，请及时充值或续费。"))
+                elif "The subscriber is expired" in decoded_message:
+                    logging.warning("宽带到期")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "宽带到期，请及时充值或续费", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，宽带到期，请及时充值或续费。"))
+                elif "The subscriber is deregistered or the passw" in decoded_message:
+                    logging.warning("手机号或宽带密码绑定错误或宽带密码过期")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息。"))
+                elif "Authentication fail" in decoded_message:
+                    logging.warning("AC认证失败")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "AC认证失败,请联系网络管理员", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，AC认证失败,请联系网络管理员。"))
+                elif "系统繁忙" in decoded_message:
+                    logging.warning("系统繁忙")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "系统繁忙，请稍后再试", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，系统繁忙，请稍后再试。"))
+                elif "注销失败" in decoded_message:
+                    logging.warning("注销失败")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "注销失败，请重试", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，注销失败，请重试。"))
+                elif "IP终端已在线" in decoded_message:
+                    logging.warning("IP终端已在线")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "IP终端已在线,请重新登录", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，IP终端已在线,请重新登录。"))
+                elif "Rad:Oppp error:" in decoded_message:
+                    logging.warning("拨号建立隧道不成功")
+                    self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                    self.master.after(0, lambda: self.show_notification("登录失败", "拨号建立隧道不成功，请重新登录", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，拨号建立隧道不成功，请重新登录。"))
+                elif "Mac,Ip,NASip,PORT err(2)" in decoded_message:
+                    logging.warning("运营商错误")
+                    self.master.after(0, lambda: self.show_notification("登录失败", "运营商错误，请确认您选择的运营商是否正确", self.config['icons']['fail']))
+                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
+                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                        self.master.after(0, self.setup_ui)
+                        self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，运营商错误，请确认您选择的运营商是否正确。"))
                 else:
                     logging.warning(f"未知错误：{decoded_message}")
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
@@ -342,6 +413,10 @@ class CampusNetLoginApp:
         except Exception as e:
             logging.error(f"登录过程中发生异常：{e}", exc_info=True)
             self.master.after(0, lambda: self.show_notification("登录过程中发生异常", "发生未知网络错误。", self.config['icons']['unknown']))
+            # 如果是自动登录且登录失败，考虑显示UI或通知用户
+            if self.show_ui:  # 如果允许显示UI，则重启UI流程
+                self.master.after(0, self.setup_ui)
+                self.master.after(0, lambda: self.show_error_message("自动登录失败","登录过程中发生异常,发生未知网络错误。"))
 
     def show_window(self, icon=None, item=None):
         """从托盘恢复窗口"""
@@ -490,12 +565,12 @@ class CampusNetLoginApp:
 
         self.isp_var = tk.StringVar()  # 创建用于存储ISP选择的变量
         self.isp_combobox = ttk.Combobox(self.master, textvariable=self.isp_var, state="readonly", width=8)  # 创建ISP选择下拉框
-        self.isp_combobox['values'] = ('中国电信', '中国移动', '中国联通')  # 设置ISP下拉框的选项
+        self.isp_combobox['values'] = ('中国电信', '中国移动', '中国联通', '校园网')  # 设置ISP下拉框的选项
         self.isp_combobox.grid(row=3, column=1,  pady=5, sticky='e')  # 设置ISP下拉框位置
 
         # 设置默认值
-        isp_mapping = {"telecom": "中国电信", "cmcc": "中国移动", "unicom": "中国联通"}
-        self.isp_combobox.set(isp_mapping.get(self.config.get("isp", "telecom"), "中国电信"))  # 根据配置文件设置ISP下拉框的默认值
+        isp_mapping = {"telecom": "中国电信", "cmcc": "中国移动", "unicom": "中国联通", "campus": "校园网"}
+        self.isp_combobox.set(isp_mapping.get(self.config.get("isp", "campus"), "校园网"))   # 设置默认选项为校园网
 
         ttk.Button(self.master, text="登录", command=self.login).grid(row=4, columnspan=3, padx=32, pady=10, sticky='ew')  # 创建登录按钮
         ttk.Button(self.master, text="设置", command=self.open_settings).grid(row=5, column=0, columnspan=3, padx=30, pady=10, sticky='ew')  # 创建设置按钮
@@ -533,7 +608,7 @@ class CampusNetLoginApp:
         self.master.withdraw()  # 隐藏主窗口
         settings_window = tk.Toplevel(self.master)
         settings_window.title("设置")
-        self.center_window_on_parent(settings_window, 290, 240)  # 调整设置窗口大小以适应新内容
+        self.center_window_on_parent(settings_window, 290, 286)  # 调整设置窗口大小以适应新内容
 
         # 创建“开机时自动启动”复选框
         self.auto_start_var = tk.IntVar(value=self.config.get("auto_start", False))
@@ -560,24 +635,30 @@ class CampusNetLoginApp:
 
         # 创建清除密钥和用户凭证按钮
         clear_key_button = tk.Button(settings_window, text="清除密钥和用户凭证", command=clear_key_and_credentials_wrapper)
-        clear_key_button.grid(row=4, column=0, columnspan=2, pady=10)
+        clear_key_button.grid(row=5, column=0, columnspan=2, pady=10)
 
         # 创建清除用户凭证按钮
         clear_credentials_button = tk.Button(settings_window, text="清除用户凭证", command=clear_credentials_wrapper)
-        clear_credentials_button.grid(row=5, column=0, columnspan=2, pady=10)
+        clear_credentials_button.grid(row=4, column=0, columnspan=2, pady=10)
 
         settings_window.grid_columnconfigure(1, weight=1)
 
         def save_settings_and_close(api_url):
-            self.config["api_url"] = api_url
-            self.config["auto_start"] = bool(self.auto_start_var.get())
-            self.config["auto_login"] = bool(self.auto_login_var.get())  # 更新自动登录的配置
-            save_config(self.config)
-            save_config_to_disk()  # 确保退出前保存配置到磁盘
-            messagebox.showinfo("设置", "配置已保存。应用将重启以应用更改。")
-            settings_window.destroy()
-            self.apply_auto_start_setting()
-            self.restart_app()
+            # 弹出确认对话框，询问用户是否确定要保存设置
+            confirm = messagebox.askyesno("确认保存设置", "您确定要保存这些设置吗？")
+            if confirm:
+                self.config["api_url"] = api_url
+                self.config["auto_start"] = bool(self.auto_start_var.get())
+                self.config["auto_login"] = bool(self.auto_login_var.get())  # 更新自动登录的配置
+                save_config(self.config)
+                save_config_to_disk()  # 确保退出前保存配置到磁盘
+                messagebox.showinfo("设置", "配置已保存。应用将重启以应用更改。")
+                settings_window.destroy()
+                self.apply_auto_start_setting()
+                self.restart_app()
+            else:
+                # 如果用户选择不保存更改，则只关闭确认对话框，不执行后续操作
+                return
 
         def save_settings_wrapper():
             save_settings_and_close(api_url_entry.get())
@@ -590,7 +671,6 @@ class CampusNetLoginApp:
 
         # 将关闭窗口的功能绑定到窗口关闭事件
         settings_window.protocol("WM_DELETE_WINDOW", lambda: self.on_settings_close(settings_window))
-        # 取消按钮调用self.on_settings_close(settings_window)而不是settings_window.destroy
 
     def on_settings_close(self, settings_window):
         settings_window.destroy()  # 关闭设置窗口
