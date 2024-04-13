@@ -1,1 +1,0 @@
-{"api_url": "http://172.21.255.105:801/eportal/", "icons": {"already": "./ico/Internet.ico", "success": "./ico/Check.ico", "fail": "./ico/Cross.ico", "unknown": "./ico/Questionmark.ico"}, "auto_login": false, "isp": "telecom", "auto_start": false}
