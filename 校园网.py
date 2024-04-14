@@ -1,5 +1,5 @@
 # 校园网.py
-# 时间：2024/04/08
+# 时间：2024/04/14
 # 作者：周咏霖
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
@@ -23,11 +23,11 @@ import webbrowser  # 导入webbrowser用于在浏览器中打开URL
 import winshell  # 导入winshell库用于Windows快捷方式操作
 import pywintypes  # 确保导入pywintypes
 import urllib.parse  # 导入urllib.parse模块
-from plyer import notification
 import pystray  # 导入pystray库
-from pystray import MenuItem as item
-from PIL import Image, ImageTk
+from pystray import MenuItem as item  # 导入pystray模块中的MenuItem类并将其重命名为item
+from PIL import Image  # 导入PIL模块中的Image类
 
+# 定义一个自定义的日志过滤器类PasswordFilter
 class PasswordFilter(logging.Filter):
     def filter(self, record):
         message = record.getMessage()
@@ -53,56 +53,58 @@ def setup_logging():
         os.makedirs(log_directory)  # 如果目录不存在，则创建它
 
     # 创建日志记录器
-    logger = logging.getLogger()
-    logger.setLevel(log_level)
+    logger = logging.getLogger()  # 获取全局日志记录器对象
+    logger.setLevel(log_level)  # 设置日志记录器的日志级别
 
     # 创建TimedRotatingFileHandler处理程序，每天生成一个新日志文件，最多保留7个日志文件
     log_file_path = os.path.join(log_directory, 'campus_net_login_app.log')  # 将日志文件放在logs目录下
-    handler = TimedRotatingFileHandler(log_file_path, when="midnight", interval=1, backupCount=7)
+    handler = TimedRotatingFileHandler(log_file_path, when="midnight", interval=1, backupCount=7)  # 创建按时间滚动的文件处理程序
+
     # 设置日志格式
-    formatter = logging.Formatter(log_format)
-    handler.setFormatter(formatter)
+    formatter = logging.Formatter(log_format)  # 创建日志格式对象
+    handler.setFormatter(formatter)  # 将格式应用到handler
     # 将handler添加到logger中
-    logger.addHandler(handler)
+    logger.addHandler(handler)  # 将handler添加到logger以记录日志信息
 
     # 控制台输出
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    console_handler = logging.StreamHandler()  # 创建控制台输出handler
+    console_handler.setFormatter(formatter)  # 设置控制台输出的日志格式
+    logger.addHandler(console_handler)  # 将控制台输出handler添加到logger中
 
     # 创建日志过滤器并添加到handler
-    pwd_filter = PasswordFilter()
-    handler.addFilter(pwd_filter)
-    console_handler.addFilter(pwd_filter)
+    pwd_filter = PasswordFilter()  # 创建密码过滤器对象
+    handler.addFilter(pwd_filter)  # 将密码过滤器添加到文件输出handler
+    console_handler.addFilter(pwd_filter)  # 将密码过滤器添加到控制台输出handler
 
     # 隐藏PIL的DEBUG日志消息
-    pil_logger = logging.getLogger('PIL')
+    pil_logger = logging.getLogger('PIL')  # 获取PIL模块的日志记录器
     pil_logger.setLevel(logging.INFO)  # 将PIL的日志级别设置为INFO，这样就不会显示DEBUG消息
 
 def on_main_close(root):
-    if messagebox.askokcancel("退出", "确定要退出应用吗？"):
+    if messagebox.askokcancel("退出", "确定要退出应用吗？"):  # 弹出确认对话框，用户确认退出应用
         save_config_to_disk()  # 确保退出前保存配置到磁盘
-        root.destroy()
+        root.destroy()  # 销毁主窗口，退出应用
 
 # 保存配置到磁盘
 def save_config_to_disk():
     global cached_config
     logging.debug("保存配置到文件中...")
-    with config_lock:
-        with open("config.json", 'w') as config_file:
-            json.dump(cached_config, config_file)
-    logging.info("配置已保存到磁盘")
+    with config_lock:  # 使用配置锁以确保线程安全
+        with open("config.json", 'w') as config_file:  # 打开配置文件以进行写操作
+            json.dump(cached_config, config_file)  # 将缓存的配置信息写入文件
+    logging.info("配置已保存到磁盘")  # 记录配置保存成功的日志信息
 
 setup_logging()  # 调用日志设置函数
 
 config_lock = threading.Lock()  # 创建一个线程锁
 
 def load_or_create_config():
-    global cached_config
+    global cached_config  # 声明全局变量 cached_config
     if cached_config:  # 如果已经缓存了配置，直接返回缓存的配置
         return cached_config
-    logging.debug("尝试加载配置文件...")
-    config_path = "config.json"
+
+    logging.debug("尝试加载配置文件...")  # 记录调试信息：尝试加载配置文件
+    config_path = "config.json"  # 配置文件路径
     default_config = {  # 默认配置信息
         "api_url": "http://172.21.255.105:801/eportal/",  # API接口URL
         "icons": {  # 图标文件路径
@@ -115,21 +117,23 @@ def load_or_create_config():
         "isp": "campus",  # 连接的ISP（Internet Service Provider）服务提供商，默认为校园网
         "auto_start": False  # 是否开机自启，默认关闭
     }
+
     with config_lock:  # 使用配置锁
-        if not os.path.exists(config_path):
-            logging.info("配置文件不存在，创建默认配置文件。")
+        if not os.path.exists(config_path):  # 如果配置文件不存在
+            logging.info("配置文件不存在，创建默认配置文件。")  # 记录信息：配置文件不存在，创建默认配置文件
             with open(config_path, 'w') as config_file:
-                json.dump(default_config, config_file)
+                json.dump(default_config, config_file)  # 将默认配置信息写入配置文件
         else:
-            logging.info("配置文件加载成功。")
+            logging.info("配置文件加载成功。")  # 记录信息：配置文件加载成功
         with open(config_path, 'r') as config_file:
             cached_config = json.load(config_file)  # 加载配置后缓存到全局变量中
-    return cached_config
+
+    return cached_config  # 返回加载或创建的配置信息
 
 def save_config(config):
-    global cached_config
+    global cached_config  # 声明全局变量 cached_config
     cached_config.update(config)  # 更新内存中的配置缓存
-    logging.info("配置已更新到缓存")
+    logging.info("配置已更新到缓存")  # 记录信息：配置已更新到缓存
 
 class CampusNetLoginApp:
     
@@ -170,23 +174,23 @@ class CampusNetLoginApp:
 
     def get_ip(self):
         # 获取本机IP地址
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # 创建套接字对象
         try:
-            s.connect(('8.8.8.8', 80))  # 连接到谷歌DNS服务器
+            s.connect(('8.8.8.8', 80))  # 连接到谷歌DNS服务器，获取本机IP地址
             ip = s.getsockname()[0]  # 获取本机IP地址
         finally:
-            s.close()
-        return ip
+            s.close()  # 关闭套接字连接
+        return ip  # 返回本机IP地址
 
     def save_credentials(self, username, password, remember):
         # 保存用户凭据信息
         if password is None:
-            logging.error("尝试保存的密码为None。")
+            logging.error("尝试保存的密码为None。")  # 记录错误信息：尝试保存的密码为None
             return  # 直接返回，避免进一步处理None类型的密码
 
         encrypted_password = self.cipher_suite.encrypt(password.encode())  # 加密密码
         # 组装凭据信息，包括运营商
-        credentials = {'username': username,'password': encrypted_password,'isp': self.isp_var.get(),'remember': remember}
+        credentials = {'username': username, 'password': encrypted_password, 'isp': self.isp_var.get(), 'remember': remember}
         with open('credentials.pkl', 'wb') as file:
             pickle.dump(credentials, file)  # 将凭据信息序列化保存到文件中
         
@@ -264,6 +268,7 @@ class CampusNetLoginApp:
         # 拼接完整的登录参数
         sign_parameter = f"{self.config['api_url']}?c=Portal&a=login&callback=dr1004&login_method=1&user_account={encoded_username}{selected_isp_code}&user_password={encoded_password}&wlan_user_ip={self.get_ip()}"
         try:
+            # 发送登录请求并获取响应
             response = requests.get(sign_parameter, timeout=5).text
             logging.info(f"登录请求发送成功，响应: {response}")
             response_dict = json.loads(response[response.find('{'):response.rfind('}')+1])  # 提取JSON字符串并转换成字典
@@ -273,26 +278,33 @@ class CampusNetLoginApp:
             ret_code = response_dict.get("ret_code")
 
             if result == "1":
-                # 在这里替换真实密码为“正确密码”进行记录
+                # 登录成功的处理
                 logging.info(f"用户 {username} 使用“正确密码”登录成功")
+                # 显示通知
                 self.master.after(0, lambda: self.show_notification("登录成功", "校园网状态", self.config['icons']['success']))
                 if remember:
+                    # 保存凭据
                     self.master.after(0, lambda: self.save_credentials(username, password, remember))
                 self.master.after(0, save_config_to_disk)  # 登录成功后保存配置到磁盘
                 self.master.after(0, self.hide_window)
             elif result == "0" and ret_code == 2:
+                # 用户已经登录的处理
                 logging.info(f"用户 {username} 已经登录")
+                # 显示通知
                 self.master.after(0, lambda: self.show_notification("校园网已连接", "校园网状态", self.config['icons']['already']))
                 if remember:
+                    # 保存凭据
                     self.master.after(0, lambda: self.save_credentials(username, password, remember))
                 self.master.after(0, save_config_to_disk)  # 登录成功后保存配置到磁盘
                 self.master.after(0, self.hide_window)
             elif result == "0" and ret_code == 1:
+                # 处理登录失败情况
                 # 需要解码msg字段以确定具体的错误类型
                 decoded_message = self.decode_base64_message(message)
                 if "ldap auth error" in decoded_message:
-                    # 在这里记录错误密码
+                    # 处理密码错误情况
                     logging.warning(f"用户 {username} 密码错误，尝试的错误密码为：{password}")
+                    # 显示密码错误通知
                     self.master.after(0, lambda: self.show_notification("登录失败", "密码错误，请重新尝试", self.config['icons']['fail']))
                     self.clear_saved_credentials()  # 清除无效凭据
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -300,8 +312,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，密码错误，请重新尝试。"))
                 elif "userid error1" in decoded_message:
-                    # 在这里记录错误账号和运营商
+                    # 处理账号或运营商错误情况
                     logging.warning(f"账号或运营商错误，尝试的错误账号为：{username}，错误运营商为：{self.isp_var.get()}")
+                    # 显示账号或运营商错误通知
                     self.master.after(0, lambda: self.show_notification("登录失败", "账号或运营商错误，请重新尝试", self.config['icons']['fail']))
                     self.clear_saved_credentials()
                     self.clear_input_fields()  # 清空输入框的调用
@@ -311,7 +324,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，账号或运营商错误，请重新尝试。"))
                 elif "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]" in decoded_message or "Reject by concurrency control" in decoded_message:
+                    # 处理当前在线设备超过两个情况
                     logging.warning("当前在线设备超过两个")
+                    # 打开网页提示用户退出设备
                     self.master.after(0, lambda: webbrowser.open("http://172.30.1.100:8080/Self/login/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "当前在线设备超过两个，请退出部分设备后重新尝试", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -319,7 +334,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，当前在线设备超过两个，请退出部分设备后重新尝试。"))
                 elif "The subscriber status is incorrect" in decoded_message:
+                    # 处理手机欠费停机或宽带到期情况
                     logging.warning("手机欠费停机或宽带到期")
+                    # 打开网页提示用户充值或续费
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "手机欠费停机或宽带到期，请及时充值或续费", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -327,7 +344,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，手机欠费停机或宽带到期，请及时充值或续费。"))
                 elif "The subscriber is expired" in decoded_message:
+                    # 处理宽带到期情况
                     logging.warning("宽带到期")
+                    # 打开网页提示用户充值或续费
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "宽带到期，请及时充值或续费", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -335,7 +354,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，宽带到期，请及时充值或续费。"))
                 elif "The subscriber is deregistered or the passw" in decoded_message:
+                    # 处理手机号或宽带密码绑定错误或过期情况
                     logging.warning("手机号或宽带密码绑定错误或宽带密码过期")
+                    # 打开网页提示用户核查账号信息
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -343,7 +364,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息。"))
                 elif "Authentication fail" in decoded_message:
+                    # 处理AC认证失败情况
                     logging.warning("AC认证失败")
+                    # 打开网页提示用户联系网络管理员
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "AC认证失败,请联系网络管理员", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -351,7 +374,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，AC认证失败,请联系网络管理员。"))
                 elif "系统繁忙" in decoded_message:
+                    # 处理系统繁忙情况
                     logging.warning("系统繁忙")
+                    # 打开网页提示用户稍后再试
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "系统繁忙，请稍后再试", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -359,7 +384,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，系统繁忙，请稍后再试。"))
                 elif "注销失败" in decoded_message:
+                    # 处理注销失败情况
                     logging.warning("注销失败")
+                    # 打开网页提示用户重试
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "注销失败，请重试", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -367,7 +394,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，注销失败，请重试。"))
                 elif "IP终端已在线" in decoded_message:
+                    # 处理IP终端已在线情况
                     logging.warning("IP终端已在线")
+                    # 打开网页提示用户重新登录
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "IP终端已在线,请重新登录", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -375,7 +404,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，IP终端已在线,请重新登录。"))
                 elif "Rad:Oppp error:" in decoded_message:
+                    # 处理拨号建立隧道不成功情况
                     logging.warning("拨号建立隧道不成功")
+                    # 打开网页提示用户重新登录
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     self.master.after(0, lambda: self.show_notification("登录失败", "拨号建立隧道不成功，请重新登录", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -383,6 +414,7 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，拨号建立隧道不成功，请重新登录。"))
                 elif "Mac,Ip,NASip,PORT err(2)" in decoded_message:
+                    # 处理运营商错误情况
                     logging.warning("运营商错误")
                     self.master.after(0, lambda: self.show_notification("登录失败", "运营商错误，请确认您选择的运营商是否正确", self.config['icons']['fail']))
                     # 如果是自动登录且登录失败，考虑显示UI或通知用户
@@ -390,7 +422,9 @@ class CampusNetLoginApp:
                         self.master.after(0, self.setup_ui)
                         self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，运营商错误，请确认您选择的运营商是否正确。"))
                 else:
+                    # 处理未知错误情况
                     logging.warning(f"未知错误：{decoded_message}")
+                    # 打开网页提示用户重新登录
                     self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                     # 尝试打开常见问题文档
                     self.master.after(0, lambda: os.startfile(os.path.join(os.getcwd(), "常见问题.docx")))
@@ -402,6 +436,7 @@ class CampusNetLoginApp:
             else:
                 # 记录不符合任一已定义条件的返回值
                 logging.error(f"无法解码消息：{message}")
+                # 打开网页提示用户重新登录
                 self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
                 # 尝试打开常见问题文档
                 self.master.after(0, lambda: os.startfile(os.path.join(os.getcwd(), "常见问题.docx")))
@@ -411,12 +446,13 @@ class CampusNetLoginApp:
                     self.master.after(0, self.setup_ui)
                     self.master.after(0, lambda: self.show_error_message("自动登录失败", "自动登录失败，无法解码消息，请去报告错误界面提交错误提示后重新尝试。"))
         except Exception as e:
+            # 记录登录过程中的异常信息
             logging.error(f"登录过程中发生异常：{e}", exc_info=True)
             self.master.after(0, lambda: self.show_notification("登录过程中发生异常", "发生未知网络错误。", self.config['icons']['unknown']))
             # 如果是自动登录且登录失败，考虑显示UI或通知用户
             if self.show_ui:  # 如果允许显示UI，则重启UI流程
                 self.master.after(0, self.setup_ui)
-                self.master.after(0, lambda: self.show_error_message("自动登录失败","登录过程中发生异常,发生未知网络错误。"))
+                self.master.after(0, lambda: self.show_error_message("自动登录失败", "登录过程中发生异常,发生未知网络错误。"))
 
     def show_window(self, icon=None, item=None):
         """从托盘恢复窗口"""
@@ -432,7 +468,7 @@ class CampusNetLoginApp:
         def setup_system_tray():
             # 加载托盘图标
             icon_image = Image.open('./ico/ECUT.ico')
-            
+
             # 创建托盘图标
             self.icon = pystray.Icon("campus_net_login",
                                       icon=icon_image,
@@ -469,22 +505,27 @@ class CampusNetLoginApp:
             file.write(f"{timestamp}: {report}\n\n")  # 将错误报告和时间戳写入文件
 
     def report_error(self):
-        error_report_window = tk.Toplevel(self.master)  # 创建一个新的顶级窗口用于报告错误
+        # 创建一个新的顶级窗口用于报告错误
+        error_report_window = tk.Toplevel(self.master)
         error_report_window.title("报告错误")  # 设置窗口标题为"报告错误"
 
+        # 添加标签提示用户描述问题或提供反馈
         tk.Label(error_report_window, text="请描述遇到的问题或提供反馈：").pack(padx=10, pady=5)
         error_text = tk.Text(error_report_window, height=10, width=50)
         error_text.pack(padx=10, pady=5)
 
         def submit_report():
-            report_content = error_text.get("1.0", "end").strip()  # 获取用户输入的错误描述并去除首尾空格
+            # 获取用户输入的错误描述并去除首尾空格
+            report_content = error_text.get("1.0", "end").strip()
             if report_content:
-                self.save_error_report(report_content)  # 调用save_error_report方法保存错误报告
+                # 调用save_error_report方法保存错误报告
+                self.save_error_report(report_content)
                 messagebox.showinfo("报告错误", "您的反馈已提交，谢谢！")
                 error_report_window.destroy()  # 销毁报告错误窗口
             else:
                 messagebox.showwarning("报告错误", "错误描述不能为空。")
 
+        # 添加提交按钮，点击提交按钮时执行submit_report函数
         tk.Button(error_report_window, text="提交", command=submit_report).pack(pady=5)
 
     def auto_login(self):
@@ -533,11 +574,11 @@ class CampusNetLoginApp:
         # 获取屏幕宽度和高度
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        
+
         # 计算窗口在屏幕中央的位置
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
-        
+
         # 设置窗口的几何尺寸和位置
         self.master.geometry(f'{width}x{height}+{x}+{y}')
 
