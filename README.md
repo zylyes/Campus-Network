@@ -19,7 +19,7 @@
 
 #### 安装指南
 1. 确保已安装Python 3.x。
-2. 安装必要的Python库：
+2. 安装必要的Python库：（不全）
    ```bash
    pip install requests cryptography pillow pystray
    ```
