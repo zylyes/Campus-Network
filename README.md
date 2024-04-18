@@ -51,7 +51,7 @@
 
 3. 克隆项目到本地：
    ```bash
-   git clone https://your-repository-link
+   git clone zylyes/Campus-Network
    ```
 4. 运行应用：
    ```bash
