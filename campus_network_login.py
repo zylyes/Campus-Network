@@ -111,7 +111,7 @@ config_lock = threading.Lock()  # 创建一个线程锁
 
 
 class CampusNetSettingsManager:
-    def __init__(self, config_file='config.json', default_config=None):
+    def __init__(self, config_file="config.json", default_config=None):
         self.config_lock = threading.Lock()
         self.cached_config = {}
         self.config_file = config_file
@@ -131,9 +131,9 @@ class CampusNetSettingsManager:
     def load_or_create_config(self):
         if self.cached_config:
             return self.cached_config
-        
+
         logging.debug("尝试加载配置文件...")
-        
+
         with self.config_lock:
             if not os.path.exists(self.config_file):
                 logging.info("配置文件不存在，创建默认配置文件。")
@@ -143,7 +143,7 @@ class CampusNetSettingsManager:
                 logging.info("配置文件加载成功。")
             with open(self.config_file, "r") as config_file:
                 self.cached_config = json.load(config_file)
-        
+
         return self.cached_config
 
     def save_config_to_disk(self):
