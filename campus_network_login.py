@@ -97,22 +97,12 @@ def setup_logging():
     )  # 将PIL的日志级别设置为INFO，这样就不会显示DEBUG消息
 
 
-def on_main_close(root):
+def on_main_close(root, settings_manager):
     if messagebox.askokcancel(
         "退出", "确定要退出应用吗？"
     ):  # 弹出确认对话框，用户确认退出应用
-        save_config_to_disk()  # 确保退出前保存配置到磁盘
+        settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
         root.destroy()  # 销毁主窗口，退出应用
-
-
-# 保存配置到磁盘
-def save_config_to_disk():
-    global cached_config
-    logging.debug("保存配置到文件中...")
-    with config_lock:  # 使用配置锁以确保线程安全
-        with open("config.json", "w") as config_file:  # 打开配置文件以进行写操作
-            json.dump(cached_config, config_file)  # 将缓存的配置信息写入文件
-    logging.info("配置已保存到磁盘")  # 记录配置保存成功的日志信息
 
 
 setup_logging()  # 调用日志设置函数
@@ -120,53 +110,61 @@ setup_logging()  # 调用日志设置函数
 config_lock = threading.Lock()  # 创建一个线程锁
 
 
-def load_or_create_config():
-    global cached_config  # 声明全局变量 cached_config
-    if cached_config:  # 如果已经缓存了配置，直接返回缓存的配置
-        return cached_config
+class CampusNetSettingsManager:
+    def __init__(self, config_file='config.json', default_config=None):
+        self.config_lock = threading.Lock()
+        self.cached_config = {}
+        self.config_file = config_file
+        self.default_config = default_config or {
+            "api_url": "http://172.21.255.105:801/eportal/",
+            "icons": {
+                "already": "./icons/Internet.ico",
+                "success": "./icons/Check.ico",
+                "fail": "./icons/Cross.ico",
+                "unknown": "./icons/Questionmark.ico",
+            },
+            "auto_login": False,
+            "isp": "campus",
+            "auto_start": False,
+        }
 
-    logging.debug("尝试加载配置文件...")  # 记录调试信息：尝试加载配置文件
-    config_path = "config.json"  # 配置文件路径
-    default_config = {  # 默认配置信息
-        "api_url": "http://172.21.255.105:801/eportal/",  # API接口URL
-        "icons": {  # 图标文件路径
-            "already": "./icons/Internet.ico",
-            "success": "./icons/Check.ico",
-            "fail": "./icons/Cross.ico",
-            "unknown": "./icons/Questionmark.ico",
-        },
-        "auto_login": False,  # 自动登录是否启用，默认关闭
-        "isp": "campus",  # 连接的ISP（Internet Service Provider）服务提供商，默认为校园网
-        "auto_start": False,  # 是否开机自启，默认关闭
-    }
+    def load_or_create_config(self):
+        if self.cached_config:
+            return self.cached_config
+        
+        logging.debug("尝试加载配置文件...")
+        
+        with self.config_lock:
+            if not os.path.exists(self.config_file):
+                logging.info("配置文件不存在，创建默认配置文件。")
+                with open(self.config_file, "w") as config_file:
+                    json.dump(self.default_config, config_file)
+            else:
+                logging.info("配置文件加载成功。")
+            with open(self.config_file, "r") as config_file:
+                self.cached_config = json.load(config_file)
+        
+        return self.cached_config
 
-    with config_lock:  # 使用配置锁
-        if not os.path.exists(config_path):  # 如果配置文件不存在
-            logging.info(
-                "配置文件不存在，创建默认配置文件。"
-            )  # 记录信息：配置文件不存在，创建默认配置文件
-            with open(config_path, "w") as config_file:
-                json.dump(default_config, config_file)  # 将默认配置信息写入配置文件
-        else:
-            logging.info("配置文件加载成功。")  # 记录信息：配置文件加载成功
-        with open(config_path, "r") as config_file:
-            cached_config = json.load(config_file)  # 加载配置后缓存到全局变量中
+    def save_config_to_disk(self):
+        logging.debug("保存配置到文件中...")
+        with self.config_lock:
+            with open(self.config_file, "w") as config_file:
+                json.dump(self.cached_config, config_file)
+        logging.info("配置已保存到磁盘")
 
-    return cached_config  # 返回加载或创建的配置信息
-
-
-def save_config(config):
-    global cached_config  # 声明全局变量 cached_config
-    cached_config.update(config)  # 更新内存中的配置缓存
-    logging.info("配置已更新到缓存")  # 记录信息：配置已更新到缓存
+    def save_config(self, config):
+        self.cached_config.update(config)
+        logging.info("配置已更新到缓存")
 
 
 class CampusNetLoginApp:
 
-    def __init__(self, master, show_ui=True):
+    def __init__(self, master, settings_manager, show_ui=True):
         self.master = master  # 初始化主窗口
         self.config_lock = threading.Lock()  # 初始化线程锁用于保护配置文件的读写
-        self.config = self.load_config()  # 加载配置文件
+        self.settings_manager = settings_manager
+        self.config = self.settings_manager.load_or_create_config()  # 加载配置文件
         self.key, self.cipher_suite = self.load_or_generate_key()  # 获取加密密钥
 
         self.eye_open_icon = tk.PhotoImage(
@@ -187,7 +185,7 @@ class CampusNetLoginApp:
 
     def load_config(self):
         # 定义加载配置的函数，使用load_or_create_config函数来加载配置
-        return load_or_create_config()
+        return self.settings_manager.load_or_create_config()
 
     def load_or_generate_key(self):
         # 定义加载或生成密钥的函数
@@ -247,7 +245,7 @@ class CampusNetLoginApp:
         self.config["isp"] = isp_reverse_mapping.get(
             self.isp_var.get(), "campus"
         )  # 获取用户选择的运营商映射值，默认为校园网
-        save_config(self.config)  # 保存配置信息
+        self.settings_manager.save_config(self.config)  # 保存配置信息
 
     def load_credentials(self):
         try:
@@ -359,7 +357,6 @@ class CampusNetLoginApp:
                     self.master.after(
                         0, lambda: self.save_credentials(username, password, remember)
                     )
-                self.master.after(0, save_config_to_disk)  # 登录成功后保存配置到磁盘
                 self.master.after(0, self.hide_window)
             elif result == "0" and ret_code == 2:
                 # 用户已经登录的处理
@@ -376,7 +373,6 @@ class CampusNetLoginApp:
                     self.master.after(
                         0, lambda: self.save_credentials(username, password, remember)
                     )
-                self.master.after(0, save_config_to_disk)  # 登录成功后保存配置到磁盘
                 self.master.after(0, self.hide_window)
             elif result == "0" and ret_code == 1:
                 # 处理登录失败情况
@@ -794,8 +790,7 @@ class CampusNetLoginApp:
         # 安排在主线程中执行的函数
         def quit_app_main_thread():
             self.master.quit()  # 结束Tkinter主事件循环
-            save_config(self.config)
-            save_config_to_disk()  # 确保退出前保存配置到磁盘
+            self.settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
             self.master.after(0, self.master.destroy)
 
         self.master.after(
@@ -1088,8 +1083,8 @@ class CampusNetLoginApp:
                 self.config["auto_login"] = bool(
                     self.auto_login_var.get()
                 )  # 更新自动登录的配置
-                save_config(self.config)
-                save_config_to_disk()  # 确保退出前保存配置到磁盘
+                self.settings_manager.save_config(self.config)
+                self.settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
                 messagebox.showinfo("设置", "配置已保存。应用将重启以应用更改。")
                 settings_window.destroy()
                 self.apply_auto_start_setting()
@@ -1301,24 +1296,20 @@ class CampusNetLoginApp:
 
     def on_destroy(self, hwnd, msg, wparam, lparam):
         """处理窗口销毁消息"""
-        save_config_to_disk()
+        self.settings_manager.save_config_to_disk()
 
 
 if __name__ == "__main__":
     root = tk.Tk()  # 创建一个Tkinter的根窗口对象
     root.withdraw()  # 隐藏根窗口，不显示在屏幕上
-    root.protocol(
-        "WM_DELETE_WINDOW", lambda: on_main_close(root)
-    )  # 设置关闭窗口时的操作为调用on_main_close函数
 
-    config = (
-        load_or_create_config()
-    )  # 调用load_or_create_config函数来加载或创建配置文件
-    show_ui = not config.get(
-        "auto_login", False
-    )  # 根据配置文件中的auto_login字段确定是否显示UI界面
+    # 创建设置管理器实例
+    settings_manager = CampusNetSettingsManager()
+    # 创建应用程序实例
+    app = CampusNetLoginApp(root, settings_manager=settings_manager, show_ui=True)
 
-    app = CampusNetLoginApp(root, show_ui=show_ui)  # 创建一个CampusNetLoginApp应用对象
+    # 传递 settings_manager 实例到关闭函数
+    root.protocol("WM_DELETE_WINDOW", lambda: on_main_close(root, settings_manager))
 
     if app.show_ui:  # 如果需要显示UI界面
         root.deiconify()  # 显示根窗口
