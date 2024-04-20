@@ -55,10 +55,12 @@
    ```
 4. 运行应用：
    ```bash
-   python 校园网.py
+   python campus_network_login.py
    ```
-   建议使用的打包命令：`pyinstaller --onefile --windowed --icon=campus_network_icon.ico -n 校园网登录程序 campus_network_login.py`
-
+   建议使用的打包命令：
+   ```bash
+   pyinstaller --onefile --windowed --icon=campus_network_icon.ico -n 校园网登录程序 campus_network_login.py
+   ```
    程序的重启部分使用了这个文件名，如需更换打包后的名字，请连同程序部分一起修改
 
    当然你也可以直接使用释放中打包好的exe
