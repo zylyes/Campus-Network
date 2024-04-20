@@ -61,12 +61,12 @@
 
 ## 项目结构和文件组织
 
-- `校园网.py`：主要的脚本文件。
+- `campus_network_login.py`：主要的脚本文件。
 - `config.json`：用于存储用户配置的文件。
-- `credentials.pkl`：加密保存用户凭据的文件。
-- `key.key`：用于加密和解密凭据的密钥文件。
+- `encrypted_credentials.pkl`：加密保存用户凭据的文件。
+- `encryption_key.key`：用于加密和解密凭据的密钥文件。
 - `logs`：存放日志文件的目录。
-- `ico`：存放图标文件的目录。
+- `icons`：存放图标文件的目录。
 
 ## 使用说明
 
@@ -79,15 +79,15 @@
 7. 配置修改可通过编辑`config.json`文件手动更改配置。
 
 ### 使用说明书
-本程序提供了两版说明书分别是[校园网自动登录程序使用说明书.docx](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.docx)和[校园网自动登录程序使用说明书.md](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.md)
+本程序提供了两版说明书分别是[校园网登录程序使用说明书.docx](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.docx)和[校园网登录程序使用说明书.md](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.md)
 - 你可以选择其中的任意一篇查看
-- 校园网自动登录程序使用说明书.md可以在线查看
-- 校园网自动登录程序使用说明书.docx需下载后查看
+- 校园网登录程序使用说明书.md可以在线查看
+- 校园网登录程序使用说明书.docx需下载后查看
 
 ### 注意事项
 - 确保所有依赖库版本兼容。
 - 在修改配置文件或源码后，需要重启程序以应用更改。
-- 使用加密功能时，请不要删除`key.key`文件，否则将无法解密已保存的密码。
+- 使用加密功能时，请不要删除`encryption_key.key`文件，否则将无法解密已保存的密码。
 - 使用该程序之前，请确保你有权使用相应的校园网账号，并已获得合法授权。
 - 本程序仅为方便学生使用校园网，对因使用不当导致的任何问题，开发者不承担任何责任。
 - 请不要在没有授权的环境下保存他人的账号信息。
