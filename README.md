@@ -79,7 +79,7 @@
 7. 配置修改可通过编辑`config.json`文件手动更改配置。
 
 ### 使用说明书
-本程序提供了两版说明书分别是[校园网登录程序使用说明书.docx](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.docx)和[校园网登录程序使用说明书.md](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%87%AA%E5%8A%A8%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.md)
+本程序提供了两版说明书分别是[校园网登录程序使用说明书.docx](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.docx)和[校园网登录程序使用说明书.md](https://github.com/zylyes/Campus-Network/blob/main/%E6%A0%A1%E5%9B%AD%E7%BD%91%E7%99%BB%E5%BD%95%E7%A8%8B%E5%BA%8F%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%E4%B9%A6.md)
 - 你可以选择其中的任意一篇查看
 - 校园网登录程序使用说明书.md可以在线查看
 - 校园网登录程序使用说明书.docx需下载后查看
