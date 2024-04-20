@@ -777,7 +777,7 @@ class CampusNetLoginApp:
         if self.config.get("auto_start"):  # 检查配置中是否开启了自动启动
             if not os.path.exists(shortcut_path):  # 如果快捷方式不存在
                 # 使用winshell创建快捷方式
-                script_path = os.path.join(os.getcwd(), '校园网.exe')  # 设置可执行文件的路径
+                script_path = os.path.join(os.getcwd(), '校园网登录程序.exe')  # 设置可执行文件的路径
                 with winshell.shortcut(shortcut_path) as shortcut:
                     shortcut.path = script_path  # 设置快捷方式的目标路径
                     shortcut.description = "自动登录校园网的应用"  # 设置快捷方式描述
@@ -792,7 +792,7 @@ class CampusNetLoginApp:
             # 等待一小段时间，确保主进程有足够的时间退出
             time.sleep(1)
             # 使用subprocess启动新的应用实例
-            subprocess.Popen(["校园网.exe"])
+            subprocess.Popen(["校园网登录程序.exe"])
             # 退出当前应用
             self.master.quit()
 
