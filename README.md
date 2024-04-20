@@ -46,7 +46,7 @@
 1. 确保Python版本为3.6或以上。
 2. 安装必要的Python库：
    ```bash
-   pip install requests cryptography pillow pystray base64 webbrowser logging pywin32 winshell
+   pip install tkinter requests cryptography pickle logging pywin32 winshell pystray Pillow webbrowser logging
    ```
 
 3. 克隆项目到本地：
