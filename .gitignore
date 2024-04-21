@@ -3,3 +3,6 @@ config.json
 encrypted_credentials.pkl
 encryption_key.key
 /logs
+/build
+/dist
+校园网登录程序.spec
