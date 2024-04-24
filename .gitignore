@@ -4,8 +4,4 @@ encrypted_credentials.pkl
 encryption_key.key
 /logs
 /build
-/dist
-校园网登录程序.spec
-打包程序.bat
-campus_network_login.spec
-打包.py
+打包.exe
