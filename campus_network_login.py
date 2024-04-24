@@ -1,6 +1,7 @@
 # campus_network_login.py
 # 时间：2024/04/24
 # 作者：周咏霖
+# 版本：V1.3.0
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
 from tkinter import (
