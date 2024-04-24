@@ -39,14 +39,14 @@
 ## 环境依赖
 
 - Python 3.6+
-- 需要的Python库：tkinter, requests, cryptography, json, pickle, logging, subprocess, socket, threading, time, base64, webbrowser, pystray, PIL, os, sys
+- 需要的Python库：tkinter, requests, cryptography, json, pickle, logging, subprocess, socket, threading, time, base64, webbrowser, pystray, PIL, os, sys, packaging
 
 ## 安装指南
 
 1. 确保Python版本为3.6或以上。
 2. 安装必要的Python库：
    ```bash
-   pip install tkinter requests cryptography pickle logging pywin32 winshell pystray Pillow webbrowser logging
+   pip install requests cryptography pywin32 winshell pystray Pillow packaging
    ```
 
 3. 克隆项目到本地：
