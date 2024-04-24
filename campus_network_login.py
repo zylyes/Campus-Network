@@ -1,5 +1,5 @@
 # campus_network_login.py
-# 时间：2024/04/21
+# 时间：2024/04/24
 # 作者：周咏霖
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
@@ -29,8 +29,9 @@ import winshell  # 导入winshell库用于Windows快捷方式操作
 import pywintypes  # 确保导入pywintypes
 import urllib.parse  # 导入urllib.parse模块
 import pystray  # 导入pystray库
-from pystray import MenuItem as item  # 导入pystray模块中的MenuItem类并将其重命名为item
-from PIL import Image  # 导入PIL模块中的Image类
+from pystray import MenuItem as item  # 从pystray库中导入MenuItem类并将其重命名为item
+from PIL import Image  # 导入PIL库中的Image类
+from packaging import version  # 导入packaging库
 
 
 # 定义一个自定义的日志过滤器类PasswordFilter
@@ -127,6 +128,9 @@ class CampusNetSettingsManager:
             "isp": "campus",
             "auto_start": False,
         }
+
+    # 程序当前版本
+    CURRENT_VERSION = "1.3.0"
 
     def load_or_create_config(self):
         if self.cached_config:
