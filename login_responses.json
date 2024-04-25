@@ -27,9 +27,45 @@
         "action": "clear_credentials_show_message"
     },
     "":{
+        "msg_contains": "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]",
+        "message": "当前在线设备超过两个，请退出部分设备后重新尝试",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
+        "msg_contains": "Reject by concurrency control",
+        "message": "当前在线设备超过两个，请退出部分设备后重新尝试",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
         "msg_contains": "",
         "message": "",
         "icon": "fail",
         "action": "clear_credentials_show_message"
-    }
+    },
+    "":{
+        "msg_contains": "",
+        "message": "",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
+        "msg_contains": "",
+        "message": "",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
+        "msg_contains": "",
+        "message": "",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
+        "msg_contains": "",
+        "message": "",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
 }
