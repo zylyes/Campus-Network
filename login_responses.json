@@ -1,0 +1,24 @@
+{
+    "success": {
+        "message": "登录成功",
+        "icon": "success",
+        "action": "notify_and_hide"
+    },
+    "already_logged_in": {
+        "message": "校园网已连接",
+        "icon": "already",
+        "action": "notify"
+    },
+    "login_fail": {
+        "message": "登录失败，请重新尝试",
+        "icon": "fail",
+        "action": "show_message"
+    },
+    "password_error": {
+        "msg_contains": "ldap auth error",
+        "message": "密码错误，请重新尝试",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    }
+    
+}

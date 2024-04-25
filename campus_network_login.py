@@ -313,6 +313,73 @@ class CampusNetLoginApp:
             )  # 记录错误日志，提示Base64消息解码失败
             return None
 
+    '''
+    # 新增方法来处理登录结果
+    def handle_login_result(self, response_dict):
+        # 从JSON文件加载响应配置
+        response_config = self.load_login_responses()
+
+        result = response_dict.get("result")  # 获取响应中的结果
+        ret_code = response_dict.get("ret_code")  # 获取响应中的返回码
+        msg = response_dict.get("msg")  # 获取响应中的消息
+
+        # 根据结果和返回码确定结果
+        outcome = ""
+        if result == "1":  # 如果结果为"1"，表示成功
+            outcome = "success"
+        elif result == "0" and ret_code == 2:  # 如果结果为"0"且返回码为2,表示已经登录
+            outcome = "already_logged_in"
+        elif result == "0" and ret_code == 1:  # 如果结果为"0"且返回码为1,表示登录失败
+            outcome = "login_fail"
+
+        response = response_config.get(outcome)  # 根据结果获取相应的响应配置
+
+        # 登录失败的特定消息处理
+        if outcome == "login_fail":  # 如果结果为登录失败
+            for key, value in response_config.items():  # 遍历响应配置
+                if "msg_contains" in value and value["msg_contains"] in msg:  # 如果响应配置中包含"msg_contains"并且消息中包含该值
+                    response = value  # 获取相应的响应配置
+                    break
+
+        if response:  # 如果存在响应配置
+            # 执行相应的操作
+            message = response["message"]  # 获取消息
+            icon = response["icon"]  # 获取图标
+            action = response["action"]  # 获取操作
+            self.execute_response_action(message, icon, action)  # 执行响应的操作
+
+    # 根据响应配置执行相应操作
+    def execute_response_action(self, message, icon, action):
+        if action == "notify":  # 如果操作为通知
+            self.show_notification(message, "校园网状态", self.config["icons"][icon])  # 显示通知
+        elif action == "notify_and_hide":  # 如果操作为通知并隐藏窗口
+            self.show_notification(message, "校园网状态", self.config["icons"][icon])  # 显示通知
+            self.hide_window()  # 隐藏窗口
+        elif action == "show_message":  # 如果操作为显示消息
+            self.show_error_message("登录失败", message)  # 显示错误消息
+        elif action == "clear_credentials_show_message":  # 如果操作为清除凭据并显示消息
+            self.clear_saved_credentials()  # 清除保存的凭据
+            self.show_error_message("登录失败", message)  # 显示错误消息
+
+    # 修改perform_login函数中的响应处理
+    def perform_login(self, username, password, auto=False):
+        # ... 登录请求代码
+        
+        try:
+            # 发送登录请求并将响应存储在名为'response'的变量中
+            response = requests.get(sign_parameter, timeout=5).text
+            logging.info(f"登录请求发送成功，响应: {response}")
+            response_dict = json.loads(
+                response[response.find("{"):response.rfind("}") + 1]
+            )  # 解析响应为字典形式
+
+            # 根据response_dict处理登录结果
+            self.handle_login_result(response_dict)  # 处理登录结果的函数调用
+
+        except Exception as e:
+            # ...  # 异常处理代码
+    '''
+
     def perform_login(self, username, password, auto=False):
         logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")
         # 运营商标识映射
