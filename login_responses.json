@@ -19,6 +19,17 @@
         "message": "密码错误，请重新尝试",
         "icon": "fail",
         "action": "clear_credentials_show_message"
+    },
+    "account_or_operator_error":{
+        "msg_contains": "userid error1",
+        "message": "账号或运营商错误，请重新尝试",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
+    },
+    "":{
+        "msg_contains": "",
+        "message": "",
+        "icon": "fail",
+        "action": "clear_credentials_show_message"
     }
-    
 }
