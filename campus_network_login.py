@@ -208,7 +208,8 @@ class CampusNetLoginApp:
         # 定义加载配置的函数，使用load_or_create_config函数来加载配置
         return self.settings_manager.load_or_create_config()
 
-    def load_or_generate_key(self):
+    @staticmethod
+    def load_or_generate_key():
         # 定义加载或生成密钥的函数
         key_file = "encryption_key.key"
         if os.path.exists(key_file):  # 如果密钥文件已存在
@@ -223,7 +224,8 @@ class CampusNetLoginApp:
             )  # 弹出提示框显示密钥已生成
         return key, Fernet(key)  # 返回密钥及使用该密钥初始化的Fernet对象
 
-    def get_ip(self):
+    @staticmethod
+    def get_ip():
         # 获取本机IP地址
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # 创建套接字对象
         try:
@@ -284,7 +286,8 @@ class CampusNetLoginApp:
             # 若文件未找到，则返回空值
             return "", "", "campus", False
 
-    def clear_saved_credentials(self):
+    @staticmethod
+    def clear_saved_credentials():
         try:
             # 尝试删除名为'encrypted_credentials.pkl'的文件
             os.remove("encrypted_credentials.pkl")
@@ -309,7 +312,8 @@ class CampusNetLoginApp:
                 "验证失败", "用户名或密码为空，请按要求填写。"
             )  # 显示警告框，提示用户名或密码为空
 
-    def validate_credentials(self, username, password):
+    @staticmethod
+    def validate_credentials(username, password):
         """验证用户名和密码是否为空"""
         if not username or not password:  # 如果用户名或密码为空
             logging.warning("验证失败：用户名或密码为空")
@@ -317,7 +321,8 @@ class CampusNetLoginApp:
             return False
         return True
 
-    def decode_base64_message(self, b64message):
+    @staticmethod
+    def decode_base64_message(b64message):
         """解码Base64消息"""
         try:
             return base64.b64decode(b64message).decode(
@@ -329,7 +334,8 @@ class CampusNetLoginApp:
             )  # 记录错误日志，提示Base64消息解码失败
             return None
 
-    def load_login_responses(self):
+    @staticmethod
+    def load_login_responses():
         # 假设您的配置文件是一个JSON文件
         config_file_path = "./login_responses.json"
         try:
@@ -541,11 +547,13 @@ class CampusNetLoginApp:
             0, quit_app_main_thread
         )  # 使用after方法来安排在主线程中执行退出应用的操作
 
-    def show_error_message(self, title, message):
+    @staticmethod
+    def show_error_message(title, message):
         """显示错误信息和用户指导"""
         messagebox.showerror(title, message)  # 弹出错误信息对话框，显示标题和消息
 
-    def save_error_report(self, report):
+    @staticmethod
+    def save_error_report(report):
         filename = "error_reports.txt"  # 错误报告保存到的文件名
         with open(filename, "a") as file:  # 以追加模式打开文件
             timestamp = time.strftime(
@@ -627,7 +635,8 @@ class CampusNetLoginApp:
             pady=5
         )  # 在窗口中添加提交按钮，并设置点击事件为submit_suggestion函数
 
-    def save_suggestion(self, suggestion):
+    @staticmethod
+    def save_suggestion(suggestion):
         filename = "suggestions.txt"  # 建议保存到的文件名
         with open(filename, "a") as file:  # 打开文件并追加内容
             timestamp = time.strftime(
