@@ -1,71 +1,92 @@
 {
     "success": {
-        "message": "登录成功",
+        "message1": "登录成功",
+        "message2": "登录成功,欢迎加入互联网",
         "icon": "success",
-        "action": "notify_and_hide"
+        "action": "success"
     },
     "already_logged_in": {
-        "message": "校园网已连接",
+        "message1": "校园网已连接",
+        "message2": "校园网已连接,无需重复登录",
         "icon": "already",
-        "action": "notify"
+        "action": "already_logged_in"
     },
-    "login_fail": {
-        "message": "登录失败，请重新尝试",
+    "ldap auth error": {
+        "message1": "密码错误",
+        "message2": "密码错误，请重新尝试",
         "icon": "fail",
-        "action": "show_message"
+        "action": "clear_credentials1"
     },
-    "password_error": {
-        "msg_contains": "ldap auth error",
-        "message": "密码错误，请重新尝试",
+    "userid error1":{
+        "message1": "账号或运营商错误",
+        "message2": "账号或运营商错误，请重新尝试",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "clear_credentials2"
     },
-    "account_or_operator_error":{
-        "msg_contains": "userid error1",
-        "message": "账号或运营商错误，请重新尝试",
+    "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]":{
+        "message1": "当前在线设备超过两个",
+        "message2": "当前在线设备超过两个，请退出部分设备后重新尝试",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web1"
     },
-    "":{
-        "msg_contains": "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]",
-        "message": "当前在线设备超过两个，请退出部分设备后重新尝试",
+    "Reject by concurrency control":{
+        "message1": "当前在线设备超过两个",
+        "message2": "当前在线设备超过两个，请退出部分设备后重新尝试",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web1"
     },
-    "":{
-        "msg_contains": "Reject by concurrency control",
-        "message": "当前在线设备超过两个，请退出部分设备后重新尝试",
+    "The subscriber status is incorrect":{
+        "message1": "手机欠费停机或宽带到期",
+        "message2": "手机欠费停机或宽带到期，请及时充值或续费",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
-    "":{
-        "msg_contains": "",
-        "message": "",
+    "The subscriber is expired":{
+        "message1": "宽带到期",
+        "message2": "宽带到期，请及时充值或续费",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
-    "":{
-        "msg_contains": "",
-        "message": "",
+    "The subscriber is deregistered or the passw":{
+        "message1": "手机号或宽带密码绑定错误或宽带密码过期",
+        "message2": "手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
-    "":{
-        "msg_contains": "",
-        "message": "",
+    "Authentication fail":{
+        "message1": "AC认证失败",
+        "message2": "AC认证失败,请联系网络管理员",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
-    "":{
-        "msg_contains": "",
-        "message": "",
+    "系统繁忙":{
+        "message1": "系统繁忙",
+        "message2": "系统繁忙，请稍后再试",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
-    "":{
-        "msg_contains": "",
-        "message": "",
+    "注销失败":{
+        "message1": "注销失败",
+        "message2": "注销失败，请重试",
         "icon": "fail",
-        "action": "clear_credentials_show_message"
+        "action": "show_web2"
     },
+    "IP终端已在线":{
+        "message1": "IP终端已在线",
+        "message2": "IP终端已在线,请重新登录",
+        "icon": "fail",
+        "action": "show_web2"
+    },
+    "Rad:Oppp error:":{
+        "message1": "拨号建立隧道不成功",
+        "message2": "拨号建立隧道不成功，请重新登录",
+        "icon": "fail",
+        "action": "show_web2"
+    },
+    "Mac,Ip,NASip,PORT err(2)":{
+        "message1": "设备信息错误",
+        "message2": "运营商错误，请确认您选择的运营商是否正确",
+        "icon": "fail",
+        "action": "show_web2"
+    }
 }

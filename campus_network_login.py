@@ -33,7 +33,16 @@ import pystray  # 导入pystray库
 from pystray import MenuItem as item  # 从pystray库中导入MenuItem类并将其重命名为item
 from PIL import Image  # 导入PIL库中的Image类
 from packaging import version  # 导入packaging库
+import win32event  # 导入win32event模块
+import winerror  # 导入winerror模块
+import sys  # 导入sys库
 
+# 全局变量声明
+global mutex
+global mutex_created
+mutex = None
+# 跟踪是否由此应用程序实例创建了互斥锁
+mutex_created = False
 
 # 定义一个自定义的日志过滤器类PasswordFilter
 class PasswordFilter(logging.Filter):
@@ -100,12 +109,17 @@ def setup_logging():
 
 
 def on_main_close(root, settings_manager):
+    # 告诉函数我们将会使用这些全局变量
+    global mutex, mutex_created
     if messagebox.askokcancel(
         "退出", "确定要退出应用吗？"
     ):  # 弹出确认对话框，用户确认退出应用
         settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
         root.destroy()  # 销毁主窗口，退出应用
-
+        if mutex and mutex_created:
+            win32event.ReleaseMutex(mutex)  # 释放互斥锁
+            win32api.CloseHandle(mutex)     # 关闭互斥锁的句柄
+            mutex_created = False
 
 setup_logging()  # 调用日志设置函数
 
@@ -313,9 +327,22 @@ class CampusNetLoginApp:
             )  # 记录错误日志，提示Base64消息解码失败
             return None
 
-    '''
-    # 新增方法来处理登录结果
-    def handle_login_result(self, response_dict):
+    def load_login_responses(self):
+        # 假设您的配置文件是一个JSON文件
+        config_file_path = './login_responses.json'
+        try:
+            with open(config_file_path, 'r', encoding='utf-8') as file:
+                login_responses = json.load(file)
+            return login_responses
+        except IOError as e:
+            # 文件打开失败的处理代码
+            print(f"Error opening the configuration file: {e}")
+        except json.JSONDecodeError as e:
+            # JSON解码失败的处理代码
+            print(f"Error parsing the configuration file: {e}")
+
+    # 处理登录结果
+    def handle_login_result(self, response_dict, username, password, remember):
         # 从JSON文件加载响应配置
         response_config = self.load_login_responses()
 
@@ -330,56 +357,75 @@ class CampusNetLoginApp:
         elif result == "0" and ret_code == 2:  # 如果结果为"0"且返回码为2,表示已经登录
             outcome = "already_logged_in"
         elif result == "0" and ret_code == 1:  # 如果结果为"0"且返回码为1,表示登录失败
-            outcome = "login_fail"
+            decode_msg = self.decode_base64_message(msg)
+            outcome = decode_msg
+        else:
+            # 记录无法解码的返回值
+            logging.error(f"无法解码消息：{msg}")
+            # 打开网页提示用户重新登录
+            self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+            # 尝试打开常见问题文档
+            self.master.after(
+                0, lambda: os.startfile(os.path.join(os.getcwd(), "FAQ.docx"))
+            )
+            self.master.after(
+                0,
+                lambda: self.show_notification(
+                    "登录失败",
+                    "无法解码消息，请去报告错误界面提交错误提示后重新尝试",
+                    self.config["icons"]["unknown"],
+                ),
+            )
+            return
 
         response = response_config.get(outcome)  # 根据结果获取相应的响应配置
 
-        # 登录失败的特定消息处理
-        if outcome == "login_fail":  # 如果结果为登录失败
-            for key, value in response_config.items():  # 遍历响应配置
-                if "msg_contains" in value and value["msg_contains"] in msg:  # 如果响应配置中包含"msg_contains"并且消息中包含该值
-                    response = value  # 获取相应的响应配置
-                    break
-
         if response:  # 如果存在响应配置
             # 执行相应的操作
-            message = response["message"]  # 获取消息
+            message1 = response["message1"]  # 获取通知
+            message2 = response["message2"]  # 获取解决方案
             icon = response["icon"]  # 获取图标
             action = response["action"]  # 获取操作
-            self.execute_response_action(message, icon, action)  # 执行响应的操作
+        else:
+            # 获取未知的登录失败的响应配置
+            message1 = "未知错误"  # 获取通知
+            message2 = "未知错误，请去报告错误界面提交错误提示后重新尝试"  # 获取解决方案
+            icon = "unknown"  # 获取图标
+            action = "unknown error"  # 获取操作
+        self.execute_response_action(outcome, message1, message2, icon, action, username, password, remember)  # 执行响应的操作
 
     # 根据响应配置执行相应操作
-    def execute_response_action(self, message, icon, action):
-        if action == "notify":  # 如果操作为通知
-            self.show_notification(message, "校园网状态", self.config["icons"][icon])  # 显示通知
-        elif action == "notify_and_hide":  # 如果操作为通知并隐藏窗口
-            self.show_notification(message, "校园网状态", self.config["icons"][icon])  # 显示通知
-            self.hide_window()  # 隐藏窗口
-        elif action == "show_message":  # 如果操作为显示消息
-            self.show_error_message("登录失败", message)  # 显示错误消息
-        elif action == "clear_credentials_show_message":  # 如果操作为清除凭据并显示消息
-            self.clear_saved_credentials()  # 清除保存的凭据
-            self.show_error_message("登录失败", message)  # 显示错误消息
-
-    # 修改perform_login函数中的响应处理
-    def perform_login(self, username, password, auto=False):
-        # ... 登录请求代码
-        
-        try:
-            # 发送登录请求并将响应存储在名为'response'的变量中
-            response = requests.get(sign_parameter, timeout=5).text
-            logging.info(f"登录请求发送成功，响应: {response}")
-            response_dict = json.loads(
-                response[response.find("{"):response.rfind("}") + 1]
-            )  # 解析响应为字典形式
-
-            # 根据response_dict处理登录结果
-            self.handle_login_result(response_dict)  # 处理登录结果的函数调用
-
-        except Exception as e:
-            # ...  # 异常处理代码
-    '''
-
+    def execute_response_action(self, outcome, message1, message2, icon, action, username, password, remember):
+        self.show_notification(message1, "校园网状态", self.config["icons"][icon])  # 显示通知
+        if action == "already_logged_in" or action == "success":  # 用户已经登录的处理
+            if remember:
+                # 保存凭据
+                self.master.after(0, lambda: self.save_credentials(username, password, remember))
+            if action == "already_logged_in":  # 如果操作为用户已经登录
+                logging.info(f"用户 {username} 已经登录")
+            elif action == "success":  # 如果操作为登录成功
+                logging.info(f"用户 {username} 登录成功")
+                self.hide_window()  # 隐藏窗口
+        else:  # 处理各种失败情况
+            self.show_error_message("登录失败", message2)  # 显示错误消息
+            if action == "show_web1":  # 如果操作为打开网页1
+                self.master.after(0,lambda: webbrowser.open("http://172.30.1.100:8080/Self/login/"))  # 打开网页1
+            elif action == "clear_credentials1":  # 如果操作为处理密码错误情况
+                logging.warning(f"用户 {username} 密码错误，尝试的错误密码为：{password}")
+                self.clear_saved_credentials()  # 清除保存的凭据
+            elif action == "clear_credentials2":  # 如果操作为处理账号或运营商错误情况
+                logging.warning(f"账号或运营商错误，尝试的错误账号为：{username}，错误运营商为：{self.isp_var.get()}")
+                self.clear_saved_credentials()  # 清除保存的凭据
+            elif action == "show_web2":  # 如果操作为打开网页2
+                self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))  # 打开网页2
+            else:  # 处理未知错误情况
+                logging.warning(f"未知错误：{outcome}")
+                # 打开网页提示用户重新登录
+                self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
+                # 尝试打开常见问题文档
+                self.master.after(0, lambda: os.startfile(os.path.join(os.getcwd(), "FAQ.docx")))
+            
+    # 加载登录响应配置
     def perform_login(self, username, password, auto=False):
         logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")
         # 运营商标识映射
@@ -402,408 +448,19 @@ class CampusNetLoginApp:
 
         # 拼接完整的登录参数
         sign_parameter = f"{self.config['api_url']}?c=Portal&a=login&callback=dr1004&login_method=1&user_account={encoded_username}{selected_isp_code}&user_password={encoded_password}&wlan_user_ip={self.get_ip()}"
+        
         try:
-            # 发送登录请求并获取响应
+            # 发送登录请求并将响应存储在名为'response'的变量中
             response = requests.get(sign_parameter, timeout=5).text
             logging.info(f"登录请求发送成功，响应: {response}")
             response_dict = json.loads(
-                response[response.find("{") : response.rfind("}") + 1]
-            )  # 提取JSON字符串并转换成字典
+                response[response.find("{"):response.rfind("}") + 1]
+            )  # 解析响应为字典形式
 
-            result = response_dict.get("result")
-            message = response_dict.get("msg")
-            ret_code = response_dict.get("ret_code")
+            # 根据response_dict处理登录结果
+            self.handle_login_result(response_dict, username, password, remember)  # 处理登录结果的函数调用
 
-            if result == "1":
-                # 登录成功的处理
-                logging.info(f"用户 {username} 使用“正确密码”登录成功")
-                # 显示通知
-                self.master.after(
-                    0,
-                    lambda: self.show_notification(
-                        "登录成功", "校园网状态", self.config["icons"]["success"]
-                    ),
-                )
-                if remember:
-                    # 保存凭据
-                    self.master.after(
-                        0, lambda: self.save_credentials(username, password, remember)
-                    )
-                self.master.after(0, self.hide_window)
-            elif result == "0" and ret_code == 2:
-                # 用户已经登录的处理
-                logging.info(f"用户 {username} 已经登录")
-                # 显示通知
-                self.master.after(
-                    0,
-                    lambda: self.show_notification(
-                        "校园网已连接", "校园网状态", self.config["icons"]["already"]
-                    ),
-                )
-                if remember:
-                    # 保存凭据
-                    self.master.after(
-                        0, lambda: self.save_credentials(username, password, remember)
-                    )
-                self.master.after(0, self.hide_window)
-            elif result == "0" and ret_code == 1:
-                # 处理登录失败情况
-                # 需要解码msg字段以确定具体的错误类型
-                decoded_message = self.decode_base64_message(message)
-                if "ldap auth error" in decoded_message:
-                    # 处理密码错误情况
-                    logging.warning(
-                        f"用户 {username} 密码错误，尝试的错误密码为：{password}"
-                    )
-                    # 显示密码错误通知
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "密码错误，请重新尝试",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    self.clear_saved_credentials()  # 清除无效凭据
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败", "自动登录失败，密码错误，请重新尝试。"
-                            ),
-                        )
-                elif "userid error1" in decoded_message:
-                    # 处理账号或运营商错误情况
-                    logging.warning(
-                        f"账号或运营商错误，尝试的错误账号为：{username}，错误运营商为：{self.isp_var.get()}"
-                    )
-                    # 显示账号或运营商错误通知
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "账号或运营商错误，请重新尝试",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    self.clear_saved_credentials()
-                    self.clear_input_fields()  # 清空输入框的调用
-                    self.clear_saved_credentials()  # 清除无效凭据
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，账号或运营商错误，请重新尝试。",
-                            ),
-                        )
-                elif (
-                    "Rad:Oppp error: code[062]:num: m[2/0] s[2/2]" in decoded_message
-                    or "Reject by concurrency control" in decoded_message
-                ):
-                    # 处理当前在线设备超过两个情况
-                    logging.warning("当前在线设备超过两个")
-                    # 打开网页提示用户退出设备
-                    self.master.after(
-                        0,
-                        lambda: webbrowser.open("http://172.30.1.100:8080/Self/login/"),
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "当前在线设备超过两个，请退出部分设备后重新尝试",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，当前在线设备超过两个，请退出部分设备后重新尝试。",
-                            ),
-                        )
-                elif "The subscriber status is incorrect" in decoded_message:
-                    # 处理手机欠费停机或宽带到期情况
-                    logging.warning("手机欠费停机或宽带到期")
-                    # 打开网页提示用户充值或续费
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "手机欠费停机或宽带到期，请及时充值或续费",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，手机欠费停机或宽带到期，请及时充值或续费。",
-                            ),
-                        )
-                elif "The subscriber is expired" in decoded_message:
-                    # 处理宽带到期情况
-                    logging.warning("宽带到期")
-                    # 打开网页提示用户充值或续费
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "宽带到期，请及时充值或续费",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，宽带到期，请及时充值或续费。",
-                            ),
-                        )
-                elif "The subscriber is deregistered or the passw" in decoded_message:
-                    # 处理手机号或宽带密码绑定错误或过期情况
-                    logging.warning("手机号或宽带密码绑定错误或宽带密码过期")
-                    # 打开网页提示用户核查账号信息
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，手机号或宽带密码绑定错误或宽带密码过期，请核查账号信息。",
-                            ),
-                        )
-                elif "Authentication fail" in decoded_message:
-                    # 处理AC认证失败情况
-                    logging.warning("AC认证失败")
-                    # 打开网页提示用户联系网络管理员
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "AC认证失败,请联系网络管理员",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，AC认证失败,请联系网络管理员。",
-                            ),
-                        )
-                elif "系统繁忙" in decoded_message:
-                    # 处理系统繁忙情况
-                    logging.warning("系统繁忙")
-                    # 打开网页提示用户稍后再试
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "系统繁忙，请稍后再试",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败", "自动登录失败，系统繁忙，请稍后再试。"
-                            ),
-                        )
-                elif "注销失败" in decoded_message:
-                    # 处理注销失败情况
-                    logging.warning("注销失败")
-                    # 打开网页提示用户重试
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败", "注销失败，请重试", self.config["icons"]["fail"]
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败", "自动登录失败，注销失败，请重试。"
-                            ),
-                        )
-                elif "IP终端已在线" in decoded_message:
-                    # 处理IP终端已在线情况
-                    logging.warning("IP终端已在线")
-                    # 打开网页提示用户重新登录
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "IP终端已在线,请重新登录",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，IP终端已在线,请重新登录。",
-                            ),
-                        )
-                elif "Rad:Oppp error:" in decoded_message:
-                    # 处理拨号建立隧道不成功情况
-                    logging.warning("拨号建立隧道不成功")
-                    # 打开网页提示用户重新登录
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "拨号建立隧道不成功，请重新登录",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，拨号建立隧道不成功，请重新登录。",
-                            ),
-                        )
-                elif "Mac,Ip,NASip,PORT err(2)" in decoded_message:
-                    # 处理运营商错误情况
-                    logging.warning("运营商错误")
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "运营商错误，请确认您选择的运营商是否正确",
-                            self.config["icons"]["fail"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，运营商错误，请确认您选择的运营商是否正确。",
-                            ),
-                        )
-                else:
-                    # 处理未知错误情况
-                    logging.warning(f"未知错误：{decoded_message}")
-                    # 打开网页提示用户重新登录
-                    self.master.after(
-                        0, lambda: webbrowser.open("http://172.21.255.105/")
-                    )
-                    # 尝试打开常见问题文档
-                    self.master.after(
-                        0, lambda: os.startfile(os.path.join(os.getcwd(), "FAQ.docx"))
-                    )
-                    self.master.after(
-                        0,
-                        lambda: self.show_notification(
-                            "登录失败",
-                            "未知错误，请去报告错误界面提交错误提示后重新尝试",
-                            self.config["icons"]["unknown"],
-                        ),
-                    )
-                    # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                    if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                        self.master.after(0, self.setup_ui)
-                        self.master.after(
-                            0,
-                            lambda: self.show_error_message(
-                                "自动登录失败",
-                                "自动登录失败，未知错误，请去报告错误界面提交错误提示后重新尝试。",
-                            ),
-                        )
-            else:
-                # 记录不符合任一已定义条件的返回值
-                logging.error(f"无法解码消息：{message}")
-                # 打开网页提示用户重新登录
-                self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
-                # 尝试打开常见问题文档
-                self.master.after(
-                    0, lambda: os.startfile(os.path.join(os.getcwd(), "FAQ.docx"))
-                )
-                self.master.after(
-                    0,
-                    lambda: self.show_notification(
-                        "登录失败",
-                        "无法解码消息，请去报告错误界面提交错误提示后重新尝试",
-                        self.config["icons"]["unknown"],
-                    ),
-                )
-                # 如果是自动登录且登录失败，考虑显示UI或通知用户
-                if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                    self.master.after(0, self.setup_ui)
-                    self.master.after(
-                        0,
-                        lambda: self.show_error_message(
-                            "自动登录失败",
-                            "自动登录失败，无法解码消息，请去报告错误界面提交错误提示后重新尝试。",
-                        ),
-                    )
-        except Exception as e:
+        except Exception as e:  # 处理登录请求异常
             # 记录登录过程中的异常信息
             logging.error(f"登录过程中发生异常：{e}", exc_info=True)
             self.master.after(
@@ -814,15 +471,6 @@ class CampusNetLoginApp:
                     self.config["icons"]["unknown"],
                 ),
             )
-            # 如果是自动登录且登录失败，考虑显示UI或通知用户
-            if self.show_ui:  # 如果允许显示UI，则重启UI流程
-                self.master.after(0, self.setup_ui)
-                self.master.after(
-                    0,
-                    lambda: self.show_error_message(
-                        "自动登录失败", "登录过程中发生异常,发生未知网络错误。"
-                    ),
-                )
 
     def show_window(self, icon=None, item=None):
         """从托盘恢复窗口"""
@@ -1372,6 +1020,16 @@ class CampusNetLoginApp:
 
 
 if __name__ == "__main__":
+    # 尝试创建一个互斥锁
+    mutex = win32event.CreateMutex(None, True, 'Global\\CampusNetLoginAppMutex')
+    last_error = win32api.GetLastError()
+
+    if last_error == winerror.ERROR_ALREADY_EXISTS:
+        messagebox.showinfo("校园网自动登录", "应用程序已在运行。")
+        sys.exit(0)
+    else:
+        mutex_created = True  # 当前实例拥有互斥锁
+
     root = tk.Tk()  # 创建一个Tkinter的根窗口对象
     root.withdraw()  # 隐藏根窗口，不显示在屏幕上
 
@@ -1387,3 +1045,9 @@ if __name__ == "__main__":
         root.deiconify()  # 显示根窗口
 
     root.mainloop()  # 进入Tkinter的主事件循环，等待用户交互```
+
+    # 程序退出时，确保释放资源
+    if mutex_created:
+        win32event.ReleaseMutex(mutex)
+        win32api.CloseHandle(mutex)
+        mutex_created = False
