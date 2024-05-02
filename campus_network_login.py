@@ -1,7 +1,7 @@
 # campus_network_login.py
 # 时间：2024/05/02
 # 作者：周咏霖
-# 版本：V1.4.0
+# 版本：V1.4.1
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
 from tkinter import (
@@ -148,7 +148,7 @@ class CampusNetSettingsManager:
         }
 
     # 程序当前版本
-    CURRENT_VERSION = "1.4.0"
+    CURRENT_VERSION = "1.4.1"
 
     def load_or_create_config(self):
         if self.cached_config:
