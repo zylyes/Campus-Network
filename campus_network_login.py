@@ -37,25 +37,24 @@ import win32event  # 导入win32event模块
 import winerror  # 导入winerror模块
 import sys  # 导入sys库
 
-# 全局变量声明
-global mutex
-global mutex_created
-mutex = None
-# 跟踪是否由此应用程序实例创建了互斥锁
-mutex_created = False
+
+global mutex  # 声明全局变量mutex
+global mutex_created  # 声明全局变量mutex_created
+mutex = None  # 初始化全局变量mutex
+mutex_created = False  # 初始化全局变量mutex_created
 
 
 # 定义一个自定义的日志过滤器类PasswordFilter
-class PasswordFilter(logging.Filter):
-    def filter(self, record):
-        message = record.getMessage()
+class PasswordFilter(logging.Filter):  # 继承logging.Filter类
+    def filter(self, record):  # 定义过滤器方法
+        message = record.getMessage()  # 获取日志记录的消息
         if "user_password=" in message:  # 如果日志信息中包含'user_password='
             new_message = message.replace(
                 message.split("user_password=")[1].split("&")[0], "********"
             )  # 将密码部分替换为'********'
-            record.msg = new_message
+            record.msg = new_message  # 更新日志记录的消息
             record.args = ()  # 清空args以避免格式化错误
-        return True
+        return True  # 返回True以允许记录消息
 
 
 # 用于缓存配置的全局变量
@@ -71,8 +70,8 @@ def setup_logging():
 
     # 确保日志目录存在
     log_directory = "logs"  # 日志文件夹名称
-    if not os.path.exists(log_directory):
-        os.makedirs(log_directory)  # 如果目录不存在，则创建它
+    if not os.path.exists(log_directory):  # 如果日志目录不存在
+        os.makedirs(log_directory)  # 创建日志目录
 
     # 创建日志记录器
     logger = logging.getLogger()  # 获取全局日志记录器对象
@@ -89,7 +88,6 @@ def setup_logging():
     # 设置日志格式
     formatter = logging.Formatter(log_format)  # 创建日志格式对象
     handler.setFormatter(formatter)  # 将格式应用到handler
-    # 将handler添加到logger中
     logger.addHandler(handler)  # 将handler添加到logger以记录日志信息
 
     # 控制台输出
@@ -110,17 +108,16 @@ def setup_logging():
 
 
 def on_main_close(root, settings_manager):
-    # 告诉函数我们将会使用这些全局变量
-    global mutex, mutex_created
+    global mutex, mutex_created  # 声明全局变量mutex和mutex_created
     if messagebox.askokcancel(
         "退出", "确定要退出应用吗？"
     ):  # 弹出确认对话框，用户确认退出应用
         settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
         root.destroy()  # 销毁主窗口，退出应用
-        if mutex and mutex_created:
+        if mutex and mutex_created:  # 如果互斥锁存在且已创建
             win32event.ReleaseMutex(mutex)  # 释放互斥锁
             win32api.CloseHandle(mutex)  # 关闭互斥锁的句柄
-            mutex_created = False
+            mutex_created = False  # 重置互斥锁创建标志
 
 
 setup_logging()  # 调用日志设置函数
@@ -128,64 +125,64 @@ setup_logging()  # 调用日志设置函数
 config_lock = threading.Lock()  # 创建一个线程锁
 
 
-class CampusNetSettingsManager:
-    def __init__(self, config_file="config.json", default_config=None):
-        self.config_lock = threading.Lock()
-        self.cached_config = {}
-        self.config_file = config_file
-        self.default_config = {
-            "api_url": "http://172.21.255.105:801/eportal/",
-            "icons": {
-                "already": "./icons/Internet.ico",
-                "success": "./icons/Check.ico",
-                "fail": "./icons/Cross.ico",
-                "unknown": "./icons/Questionmark.ico",
+class CampusNetSettingsManager:  # 定义一个校园网设置管理器类
+    def __init__(self, config_file="config.json", default_config=None):  # 初始化方法
+        self.config_lock = threading.Lock()  # 创建一个线程锁
+        self.cached_config = {}  # 创建一个缓存配置的字典
+        self.config_file = config_file  # 配置文件名
+        self.default_config = {  # 默认配置
+            "api_url": "http://172.21.255.105:801/eportal/",  # API URL
+            "icons": {  # 图标
+                "already": "./icons/Internet.ico",  # 已登录
+                "success": "./icons/Check.ico",  # 成功
+                "fail": "./icons/Cross.ico",  # 失败
+                "unknown": "./icons/Questionmark.ico",  # 未知
             },
             "minimize_to_tray_on_login": True,  # 默认情况下登录成功后最小化到托盘
-            "auto_login": False,
-            "isp": "campus",
-            "auto_start": False,
+            "auto_login": False,  # 默认情况下不自动登录
+            "isp": "campus",  # 默认运营商为校园网
+            "auto_start": False,  # 默认情况下不自动启动
         }
 
     # 程序当前版本
     CURRENT_VERSION = "1.4.1"
 
-    def load_or_create_config(self):
-        if self.cached_config:
-            return self.cached_config
+    def load_or_create_config(self):  # 加载或创建配置
+        if self.cached_config:  # 如果缓存配置存在
+            return self.cached_config  # 直接返回缓存配置
 
-        logging.debug("尝试加载配置文件...")
+        logging.debug("尝试加载配置文件...")  # 记录调试信息：尝试加载配置文件
 
-        with self.config_lock:
-            if not os.path.exists(self.config_file):
-                logging.info("配置文件不存在，创建默认配置文件。")
-                with open(self.config_file, "w") as config_file:
-                    json.dump(self.default_config, config_file)
-            else:
-                logging.info("配置文件加载成功。")
-            with open(self.config_file, "r") as config_file:
-                self.cached_config = json.load(config_file)
+        with self.config_lock:  # 使用线程锁
+            if not os.path.exists(self.config_file):  # 如果配置文件不存在
+                logging.info("配置文件不存在，创建默认配置文件。")  # 记录信息：配置文件不存在，创建默认配置文件
+                with open(self.config_file, "w") as config_file:  # 以写入模式打开配置文件
+                    json.dump(self.default_config, config_file)  # 将默认配置写入配置文件
+            else:  # 如果配置文件存在
+                logging.info("配置文件加载成功。")  # 记录信息：配置文件加载成功
+            with open(self.config_file, "r") as config_file:  # 以只读模式打开配置文件
+                self.cached_config = json.load(config_file)  # 加载配置文件到缓存配置
 
-        return self.cached_config
+        return self.cached_config  # 返回缓存配置
 
-    def save_config_to_disk(self):
-        logging.debug("保存配置到文件中...")
-        with self.config_lock:
-            with open(self.config_file, "w") as config_file:
-                json.dump(self.cached_config, config_file)
-        logging.info("配置已保存到磁盘")
+    def save_config_to_disk(self):  # 保存配置到磁盘
+        logging.debug("保存配置到文件中...")  # 记录调试信息：保存配置到文件中
+        with self.config_lock:  # 使用线程锁
+            with open(self.config_file, "w") as config_file:  # 以写入模式打开配置文件
+                json.dump(self.cached_config, config_file)  # 将缓存配置保存到配置文件
+        logging.info("配置已保存到磁盘")  # 记录信息：配置已保存到磁盘
 
-    def save_config(self, config):
-        self.cached_config.update(config)
-        logging.info("配置已更新到缓存")
+    def save_config(self, config):  # 保存配置
+        self.cached_config.update(config)  # 更新缓存配置
+        logging.info("配置已更新到缓存")  # 记录信息：配置已更新到缓存
 
 
-class CampusNetLoginApp:
+class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
-    def __init__(self, master, settings_manager, show_ui=True):
+    def __init__(self, master, settings_manager, show_ui=True):  # 初始化方法
         self.master = master  # 初始化主窗口
         self.config_lock = threading.Lock()  # 初始化线程锁用于保护配置文件的读写
-        self.settings_manager = settings_manager
+        self.settings_manager = settings_manager  # 初始化设置管理器
         self.config = self.settings_manager.load_or_create_config()  # 加载配置文件
         self.key, self.cipher_suite = self.load_or_generate_key()  # 获取加密密钥
 
