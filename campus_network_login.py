@@ -202,28 +202,28 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             self.setup_ui()  # 初始化UI界面
         self.auto_login()  # 执行自动登录操作
 
-    def load_config(self):
+    def load_config(self):  # 加载配置
         # 定义加载配置的函数，使用load_or_create_config函数来加载配置
         return self.settings_manager.load_or_create_config()
 
-    @staticmethod
-    def load_or_generate_key():
+    @staticmethod  # 静态方法
+    def load_or_generate_key():  # 加载或生成密钥
         # 定义加载或生成密钥的函数
-        key_file = "encryption_key.key"
+        key_file = "encryption_key.key"  # 密钥文件名
         if os.path.exists(key_file):  # 如果密钥文件已存在
-            with open(key_file, "rb") as file:
+            with open(key_file, "rb") as file:  # 以二进制读取模式打开密钥文件
                 key = file.read()  # 从文件中读取密钥
         else:  # 如果密钥文件不存在
             key = Fernet.generate_key()  # 生成新的密钥
-            logging.debug("新建密钥文件")
-            with open(key_file, "wb") as file:
+            logging.debug("新建密钥文件")  # 记录调试信息：新建密钥文件
+            with open(key_file, "wb") as file:  # 以二进制写入模式打开密钥文件
                 file.write(key)  # 将新生成的密钥写入文件
             messagebox.showinfo(
                 "密钥生成", "新的加密密钥已生成并保存。"
             )  # 弹出提示框显示密钥已生成
         return key, Fernet(key)  # 返回密钥及使用该密钥初始化的Fernet对象
 
-    @staticmethod
+    @staticmethod  # 静态方法
     def get_ip():
         # 获取本机IP地址
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # 创建套接字对象
@@ -245,12 +245,12 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         encrypted_password = self.cipher_suite.encrypt(password.encode())  # 加密密码
         # 组装凭据信息，包括运营商
         credentials = {
-            "username": username,
-            "password": encrypted_password,
-            "isp": self.isp_var.get(),
-            "remember": remember,
+            "username": username,  # 用户名
+            "password": encrypted_password,  # 加密后的密码
+            "isp": self.isp_var.get(),  # 运营商
+            "remember": remember,  # 是否记住密码
         }
-        with open("encrypted_credentials.pkl", "wb") as file:
+        with open("encrypted_credentials.pkl", "wb") as file:  # 以二进制写入模式打开文件
             pickle.dump(credentials, file)  # 将凭据信息序列化保存到文件中
 
         logging.info(
@@ -259,20 +259,20 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
         # 保存运营商选择
         isp_reverse_mapping = {
-            "中国电信": "telecom",
-            "中国移动": "cmcc",
-            "中国联通": "unicom",
-            "campus": "校园网",
+            "中国电信": "telecom",  # 中国电信
+            "中国移动": "cmcc",  # 中国移动
+            "中国联通": "unicom",  # 中国联通
+            "campus": "校园网",  # 校园网
         }  # 定义运营商映射关系
         self.config["isp"] = isp_reverse_mapping.get(
             self.isp_var.get(), "campus"
         )  # 获取用户选择的运营商映射值，默认为校园网
         self.settings_manager.save_config(self.config)  # 保存配置信息
 
-    def load_credentials(self):
+    def load_credentials(self):  # 加载凭据
         try:
             # 尝试打开名为'encrypted_credentials.pkl'的文件
-            with open("encrypted_credentials.pkl", "rb") as file:
+            with open("encrypted_credentials.pkl", "rb") as file:  # 以二进制读取模式打开文件
                 # 从文件中加载凭据
                 credentials = pickle.load(file)
                 # 获取用户名和解密后的密码
@@ -280,13 +280,13 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 password = self.cipher_suite.decrypt(credentials["password"]).decode()
                 isp = credentials.get("isp", "campus")  # 默认运营商为校园网
                 remember = credentials.get("remember", False)  # 默认不记住密码
-                return username, password, isp, remember
-        except FileNotFoundError:
+                return username, password, isp, remember  # 返回用户名、密码、运营商和是否记住密码
+        except FileNotFoundError:  # 处理文件未找到异常
             # 若文件未找到，则返回空值
             return "", "", "campus", False
 
-    @staticmethod
-    def clear_saved_credentials():
+    @staticmethod  # 静态方法
+    def clear_saved_credentials():  # 清除保存的凭据
         try:
             # 尝试删除名为'encrypted_credentials.pkl'的文件
             os.remove("encrypted_credentials.pkl")
@@ -294,7 +294,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             # 若文件未找到，则忽略异常
             pass
 
-    def login(self):
+    def login(self):  # 登录
         # 从输入框获取用户名和密码
         username = self.username_entry.get()  # 从用户名输入框获取用户名
         password = self.password_entry.get()  # 从密码输入框获取密码
@@ -305,8 +305,8 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             login_thread = threading.Thread(
                 target=self.perform_login, args=(username, password, False)
             )
-            login_thread.start()
-        else:
+            login_thread.start()  # 启动登录线程
+        else:  # 如果用户名或密码为空
             messagebox.showwarning(
                 "验证失败", "用户名或密码为空，请按要求填写。"
             )  # 显示警告框，提示用户名或密码为空
