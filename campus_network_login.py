@@ -333,20 +333,20 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             )  # 记录错误日志，提示Base64消息解码失败
             return None
 
-    @staticmethod  
+    @staticmethod  # 静态方法
     def load_login_responses():
         # 假设您的配置文件是一个JSON文件
         config_file_path = "./login_responses.json"
         try:
-            with open(config_file_path, "r", encoding="utf-8") as file:
-                login_responses = json.load(file)
-            return login_responses
+            with open(config_file_path, "r", encoding="utf-8") as file:  # 以只读模式打开配置文件
+                login_responses = json.load(file)  # 从文件中加载JSON数据
+            return login_responses  # 返回加载的JSON数据
         except IOError as e:
             # 文件打开失败的处理代码
-            print(f"Error opening the configuration file: {e}")
+            print(f"Error opening the configuration file: {e}")  # 打印错误信息
         except json.JSONDecodeError as e:
             # JSON解码失败的处理代码
-            print(f"Error parsing the configuration file: {e}")
+            print(f"Error parsing the configuration file: {e}")  # 打印错误信息
 
     # 处理登录结果
     def handle_login_result(self, response_dict, username, password, remember):
@@ -360,12 +360,12 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 根据结果和返回码确定结果
         outcome = ""
         if result == "1":  # 如果结果为"1"，表示成功
-            outcome = "success"
+            outcome = "success"  # 结果为成功
         elif result == "0" and ret_code == 2:  # 如果结果为"0"且返回码为2,表示已经登录
-            outcome = "already_logged_in"
+            outcome = "already_logged_in"  # 结果为已经登录
         elif result == "0" and ret_code == 1:  # 如果结果为"0"且返回码为1,表示登录失败
-            decode_msg = self.decode_base64_message(msg)
-            outcome = decode_msg
+            decode_msg = self.decode_base64_message(msg)  # 解码消息
+            outcome = decode_msg  # 结果为解码后的消息
         else:
             # 记录无法解码的返回值
             logging.error(f"无法解码消息：{msg}")
@@ -382,8 +382,8 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                     "无法解码消息，请去报告错误界面提交错误提示后重新尝试",
                     self.config["icons"]["unknown"],
                 ),
-            )
-            return
+            )  # 显示通知
+            return  # 返回
 
         response = response_config.get(outcome)  # 根据结果获取相应的响应配置
 
@@ -419,9 +419,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                     0, lambda: self.save_credentials(username, password, remember)
                 )
             if action == "already_logged_in":  # 如果操作为用户已经登录
-                logging.info(f"用户 {username} 已经登录")
+                logging.info(f"用户 {username} 已经登录")  # 记录信息：用户已经登录
             elif action == "success":  # 如果操作为登录成功
-                logging.info(f"用户 {username} 登录成功")
+                logging.info(f"用户 {username} 登录成功")  # 记录信息：用户登录成功
                 # 根据配置决定是最小化到托盘还是退出程序
                 if self.config.get("minimize_to_tray_on_login", True):
                     self.master.after(
@@ -438,12 +438,12 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             elif action == "clear_credentials1":  # 如果操作为处理密码错误情况
                 logging.warning(
                     f"用户 {username} 密码错误，尝试的错误密码为：{password}"
-                )
+                )  # 记录警告：用户密码错误
                 self.clear_saved_credentials()  # 清除保存的凭据
             elif action == "clear_credentials2":  # 如果操作为处理账号或运营商错误情况
                 logging.warning(
                     f"账号或运营商错误，尝试的错误账号为：{username}，错误运营商为：{self.isp_var.get()}"
-                )
+                )  # 记录警告：账号或运营商错误
                 self.clear_saved_credentials()  # 清除保存的凭据
             elif action == "show_web2":  # 如果操作为打开网页2
                 self.master.after(
@@ -460,20 +460,20 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
     # 加载登录响应配置
     def perform_login(self, username, password, auto=False):
-        logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")
+        logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")  # 记录调试信息
         # 运营商标识映射
         isp_codes = {
-            "中国电信": "@telecom",
-            "中国移动": "@cmcc",
-            "中国联通": "@unicom",
-            "校园网": "@campus",
+            "中国电信": "@telecom",  # 中国电信
+            "中国移动": "@cmcc",  # 中国移动
+            "中国联通": "@unicom",  # 中国联通
+            "校园网": "@campus",  # 校园网
         }
         selected_isp_code = isp_codes.get(self.isp_var.get(), "@campus")  # 默认为校园网
 
         logging.info(
             f"尝试登录：用户名 {username}，运营商：{self.isp_var.get()}，密码已提交"
-        )
-        remember = self.remember_var.get() == 1 if not auto else True
+        )  # 记录信息：尝试登录
+        remember = self.remember_var.get() == 1 if not auto else True  # 记住密码
 
         # URL编码用户名和密码
         encoded_username = urllib.parse.quote(username)
@@ -485,7 +485,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         try:
             # 发送登录请求并将响应存储在名为'response'的变量中
             response = requests.get(sign_parameter, timeout=5).text
-            logging.info(f"登录请求发送成功，响应: {response}")
+            logging.info(f"登录请求发送成功，响应: {response}")  # 记录信息：登录请求发送成功
             response_dict = json.loads(
                 response[response.find("{") : response.rfind("}") + 1]
             )  # 解析响应为字典形式
@@ -505,7 +505,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                     "发生未知网络错误。",
                     self.config["icons"]["unknown"],
                 ),
-            )
+            )  # 显示通知
 
     def show_window(self, icon=None, item=None):
         """从托盘恢复窗口"""
@@ -518,18 +518,18 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         """隐藏窗口并显示托盘图标"""
         self.master.withdraw()  # 隐藏窗口
 
-        def setup_system_tray():
+        def setup_system_tray():  # 设置系统托盘
             # 加载托盘图标
             icon_image = Image.open("./icons/ECUT.ico")
 
             # 创建托盘图标
             self.icon = pystray.Icon(
-                "campus_net_login",
-                icon=icon_image,
-                title="校园网自动登录",
+                "campus_net_login",  # 托盘图标的名称
+                icon=icon_image,  # 托盘图标的图像
+                title="校园网自动登录",  # 托盘图标的标题
                 menu=pystray.Menu(
-                    item("打开", self.show_window, default=True),
-                    item("退出", lambda icon, item: self.quit_app(icon)),
+                    item("打开", self.show_window, default=True),  # 打开菜单项
+                    item("退出", lambda icon, item: self.quit_app(icon)),  # 退出菜单项
                 ),
             )
             # 运行托盘图标
@@ -538,7 +538,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 在后台线程中设置系统托盘，防止阻塞主线程
         threading.Thread(target=setup_system_tray).start()
 
-    def quit_app(self, icon=None, item=None):
+    def quit_app(self, icon=None, item=None):  # 退出应用
         if icon:
             icon.stop()  # 如果提供了icon，则执行与系统托盘相关的逻辑
         # 保存配置，清理资源，退出程序的其余步骤
@@ -546,19 +546,19 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 可能有必要的清理步骤
         self.master.destroy()
 
-    def _quit_app_main_thread(self):
-        # 这个方法在主线程上运行，可以安全地与Tkinter交互
+    def _quit_app_main_thread(self):  # 退出应用的主线程
+        # 在主线程上运行，可以安全地与Tkinter交互
         self.master.quit()  # 退出Tkinter主循环
         self.settings_manager.save_config_to_disk()  # 保存配置
         self.master.after(0, self.master.destroy)  # 销毁主窗口
 
-    @staticmethod
+    @staticmethod  # 静态方法
     def show_error_message(title, message):
         """显示错误信息和用户指导"""
         messagebox.showerror(title, message)  # 弹出错误信息对话框，显示标题和消息
 
-    @staticmethod
-    def save_error_report(report):
+    @staticmethod  # 静态方法
+    def save_error_report(report):  # 保存错误报告
         filename = "error_reports.txt"  # 错误报告保存到的文件名
         with open(filename, "a") as file:  # 以追加模式打开文件
             timestamp = time.strftime(
@@ -568,46 +568,46 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
     def report_error(self):
         # 创建一个新的顶级窗口用于报告错误
-        error_report_window = tk.Toplevel(self.master)
+        error_report_window = tk.Toplevel(self.master)  # 创建一个新的顶级窗口
         error_report_window.title("报告错误")  # 设置窗口标题为"报告错误"
 
         # 添加标签提示用户描述问题或提供反馈
         tk.Label(error_report_window, text="请描述遇到的问题或提供反馈：").pack(
             padx=10, pady=5
         )
-        error_text = tk.Text(error_report_window, height=10, width=50)
-        error_text.pack(padx=10, pady=5)
+        error_text = tk.Text(error_report_window, height=10, width=50)  # 创建文本框
+        error_text.pack(padx=10, pady=5)  # 将文本框放置在窗口中
 
-        def submit_report():
+        def submit_report():  # 提交错误报告
             # 获取用户输入的错误描述并去除首尾空格
             report_content = error_text.get("1.0", "end").strip()
-            if report_content:
+            if report_content:  # 如果错误描述不为空
                 # 调用save_error_report方法保存错误报告
                 self.save_error_report(report_content)
-                messagebox.showinfo("报告错误", "您的反馈已提交，谢谢！")
+                messagebox.showinfo("报告错误", "您的反馈已提交，谢谢！")  # 弹出信息提示框
                 error_report_window.destroy()  # 销毁报告错误窗口
-            else:
-                messagebox.showwarning("报告错误", "错误描述不能为空。")
+            else:  # 如果错误描述为空
+                messagebox.showwarning("报告错误", "错误描述不能为空。")  # 弹出警告提示框
 
         # 添加提交按钮，点击提交按钮时执行submit_report函数
         tk.Button(error_report_window, text="提交", command=submit_report).pack(pady=5)
 
-    def auto_login(self):
+    def auto_login(self):  # 自动登录
         if self.config.get("auto_login", False):  # 检查配置是否要求自动登录
             username, password, isp, remember = self.load_credentials()  # 加载凭据
-            if username and password:
+            if username and password:  # 如果用户名和密码存在
                 self.isp_var.set(isp)  # 设置运营商变量
                 # 使用加载的凭据进行登录
                 self.perform_login(username, password, auto=True)
             else:
                 # 如果没有有效的凭据，显示UI以便用户可以手动输入
-                if self.show_ui:
-                    self.setup_ui()
+                if self.show_ui:  # 如果配置中启用了自动登录
+                    self.setup_ui()  # 显示UI
         else:
             # 如果配置中未启用自动登录，则总是显示UI
             self.setup_ui()
 
-    def open_suggestion_box(self):
+    def open_suggestion_box(self):  # 打开建议框
         suggestion_window = tk.Toplevel(self.master)  # 创建一个新的顶级窗口用于提交建议
         suggestion_window.title("提交建议")  # 设置窗口标题为"提交建议"
 
@@ -619,11 +619,11 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         )  # 创建一个文本框用于输入建议
         suggestion_text.pack(padx=10, pady=5)  # 将文本框放置在窗口中
 
-        def submit_suggestion():
+        def submit_suggestion():  # 提交建议
             suggestion_content = suggestion_text.get(
                 "1.0", "end"
             ).strip()  # 获取用户输入的建议并去除首尾空格
-            if suggestion_content:
+            if suggestion_content:  # 如果建议内容不为空
                 self.save_suggestion(
                     suggestion_content
                 )  # 调用save_suggestion方法保存建议
@@ -631,7 +631,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                     "提交建议", "您的建议已提交，感谢您的反馈！"
                 )  # 弹出信息提示框，确认建议已提交
                 suggestion_window.destroy()  # 销毁提交建议窗口
-            else:
+            else:  # 如果建议内容为空
                 messagebox.showwarning(
                     "提交建议", "建议内容不能为空。"
                 )  # 弹出警告提示框，提醒建议内容不能为空
@@ -640,8 +640,8 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             pady=5
         )  # 在窗口中添加提交按钮，并设置点击事件为submit_suggestion函数
 
-    @staticmethod
-    def save_suggestion(suggestion):
+    @staticmethod  # 静态方法
+    def save_suggestion(suggestion):  # 保存建议
         filename = "suggestions.txt"  # 建议保存到的文件名
         with open(filename, "a") as file:  # 打开文件并追加内容
             timestamp = time.strftime(
@@ -663,7 +663,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 设置窗口的几何尺寸和位置
         self.master.geometry(f"{width}x{height}+{x}+{y}")
 
-    def setup_ui(self):
+    def setup_ui(self):  # 设置UI
         self.master.title("校园网自动登录")  # 设置窗口标题为"校园网自动登录"
         self.center_window(
             326, 286
