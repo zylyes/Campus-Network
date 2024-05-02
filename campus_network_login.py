@@ -133,7 +133,7 @@ class CampusNetSettingsManager:
         self.config_lock = threading.Lock()
         self.cached_config = {}
         self.config_file = config_file
-        self.default_config = default_config or {
+        self.default_config = {
             "api_url": "http://172.21.255.105:801/eportal/",
             "icons": {
                 "already": "./icons/Internet.ico",
@@ -141,6 +141,7 @@ class CampusNetSettingsManager:
                 "fail": "./icons/Cross.ico",
                 "unknown": "./icons/Questionmark.ico",
             },
+            "minimize_to_tray_on_login": True,  # 默认情况下登录成功后最小化到托盘
             "auto_login": False,
             "isp": "campus",
             "auto_start": False,
@@ -217,6 +218,7 @@ class CampusNetLoginApp:
                 key = file.read()  # 从文件中读取密钥
         else:  # 如果密钥文件不存在
             key = Fernet.generate_key()  # 生成新的密钥
+            logging.debug("新建密钥文件")
             with open(key_file, "wb") as file:
                 file.write(key)  # 将新生成的密钥写入文件
             messagebox.showinfo(
@@ -423,7 +425,11 @@ class CampusNetLoginApp:
                 logging.info(f"用户 {username} 已经登录")
             elif action == "success":  # 如果操作为登录成功
                 logging.info(f"用户 {username} 登录成功")
-                self.master.after(0, self.hide_window)  # 确保在主线程上隐藏窗口
+                # 根据配置决定是最小化到托盘还是退出程序
+                if self.config.get("minimize_to_tray_on_login", True):
+                    self.master.after(0, self.hide_window)  # 如果配置为 True 则最小化到托盘
+                else:
+                    self.master.after(0, self.quit_app)  # 如果配置为 False 则退出程序
         else:  # 处理各种失败情况
             self.show_error_message("登录失败", message2)  # 显示错误消息
             if action == "show_web1":  # 如果操作为打开网页1
@@ -533,11 +539,13 @@ class CampusNetLoginApp:
         # 在后台线程中设置系统托盘，防止阻塞主线程
         threading.Thread(target=setup_system_tray).start()
 
-    def quit_app(self, icon, item=None):
-        icon.stop()  # 这在一个单独的线程上停止了图标
-
-        # 安排在主线程上运行的GUI操作
-        self.master.after(0, self._quit_app_main_thread)
+    def quit_app(self, icon=None, item=None):
+        if icon:
+            icon.stop()  # 如果提供了icon，则执行与系统托盘相关的逻辑
+        # 保存配置，清理资源，退出程序的其余步骤
+        self.master.quit()
+        # 可能有必要的清理步骤
+        self.master.destroy()
 
     def _quit_app_main_thread(self):
         # 这个方法在主线程上运行，可以安全地与Tkinter交互
@@ -771,98 +779,87 @@ class CampusNetLoginApp:
             self.password_visible = True
 
     def open_settings(self):
-        self.master.withdraw()  # 隐藏主窗口
+        # 隐藏主窗口以显示设置窗口
+        self.master.withdraw()
         settings_window = tk.Toplevel(self.master)
         settings_window.title("设置")
-        self.center_window_on_parent(
-            settings_window, 290, 286
-        )  # 调整设置窗口大小以适应新内容
+        settings_window.resizable(False, False)  # 禁止调整窗口大小
+        self.center_window_on_parent(settings_window, 350, 210)  # 调整设置窗口的大小
+        self.minimize_to_tray_var = tk.IntVar(value=self.config.get('minimize_to_tray_on_login', True))
+        self.auto_start_var = tk.IntVar(value=self.config.get('auto_start', False))
+        self.auto_login_var = tk.IntVar(value=self.config.get('auto_login', False))
 
-        # 创建“开机时自动启动”复选框
-        self.auto_start_var = tk.IntVar(value=self.config.get("auto_start", False))
-        tk.Checkbutton(
-            settings_window, text="开机时自动启动", variable=self.auto_start_var
-        ).grid(row=2, column=1, columnspan=2, padx=10, pady=10, sticky="w")
+        main_frame = ttk.Frame(settings_window)  # 创建主Frame
+        main_frame.pack(padx=15, pady=15, fill=tk.BOTH, expand=True)  # 为主Frame添加内边距
 
-        # 在设置窗口中添加“自动登录”复选框
-        self.auto_login_var = tk.IntVar(value=self.config.get("auto_login", False))
-        auto_login_checkbox = tk.Checkbutton(
-            settings_window, text="自动登录", variable=self.auto_login_var
-        )
-        auto_login_checkbox.grid(
-            row=1, column=1, columnspan=2, padx=10, pady=10, sticky="w"
-        )
+        ttk.Label(main_frame, text="API URL：").grid(row=0, column=0, pady=(0, 10), sticky='w')
+        api_url_entry = ttk.Entry(main_frame)
+        api_url_entry.grid(row=0, column=1, pady=(0, 10), sticky='ew')
 
-        # 创建API URL输入框
-        tk.Label(settings_window, text="API URL:").grid(
-            row=0, column=0, padx=10, pady=10, sticky="e"
+        minimize_to_tray_checkbox = ttk.Checkbutton(main_frame, text="登录成功后最小化到托盘", variable=self.minimize_to_tray_var)
+        minimize_to_tray_checkbox.grid(row=1, column=0, columnspan=2, pady=(0, 10), sticky='w')
+
+        auto_start_checkbox = ttk.Checkbutton(main_frame, text="开机时自动启动", variable=self.auto_start_var)
+        auto_start_checkbox.grid(row=2, column=0, columnspan=2, pady=(0, 10), sticky='w')
+
+        auto_login_checkbox = ttk.Checkbutton(main_frame, text="自动登录", variable=self.auto_login_var)
+        auto_login_checkbox.grid(row=3, column=0, columnspan=2, pady=(0, 10), sticky='w')
+
+        clear_key_button = ttk.Button(main_frame, text="清除密钥和用户凭证", command=self.clear_key_and_credentials)
+        clear_key_button.grid(row=4, column=0, pady=(10, 0), sticky='ew')  # 修改Button的对齐方式
+
+        clear_credentials_button = ttk.Button(main_frame, text="清除用户凭证", command=self.clear_credentials)
+        clear_credentials_button.grid(row=4, column=1, pady=(10, 0), sticky='ew')  # 修改Button的对齐方式
+
+        main_frame.grid_columnconfigure(1, weight=1)  # 让Entry能随窗口宽度改变
+
+        # 设置网格内部件之间的距离
+        for child in main_frame.winfo_children():
+            child.grid_configure(padx=5, pady=2)
+
+        # 目前的代码不支持取消操作；这里添加取消按钮和对应的处理函数来增加这个功能
+        cancel_button = ttk.Button(main_frame, text="取消", command=lambda: self.on_settings_close(settings_window))
+        cancel_button.grid(row=5, column=1, pady=(10, 0), sticky='e')
+
+        # 向保存按钮添加引用传参以便传递参数至处理函数
+        save_button = ttk.Button(
+            main_frame,
+            text="保存",
+            command=lambda: self.save_settings_and_close(api_url_entry.get(), settings_window)
         )
-        api_url_entry = tk.Entry(settings_window)
-        api_url_entry.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
+        save_button.grid(row=5, column=0, pady=(10, 0), sticky='w')
+
+        # 默认由弹窗加载时把先前设置的API URL填入Entry
         api_url_entry.insert(0, self.config.get("api_url", ""))
 
-        def clear_key_and_credentials_wrapper():
-            self.clear_key_and_credentials()
+        # 设置窗口关闭的协议处理函数
+        settings_window.protocol("WM_DELETE_WINDOW", lambda: self.on_settings_close(settings_window))
+
+    def save_settings_and_close(self, api_url, settings_window):
+        # 弹出确认保存设置对话框
+        confirm = messagebox.askyesno("确认保存设置", "您确定要保存这些设置吗？")
+        if confirm:
+            # 更新程序的配置实例
+            self.config["api_url"] = api_url
+            self.config["minimize_to_tray_on_login"] = self.minimize_to_tray_var.get()
+            self.config["auto_start"] = self.auto_start_var.get()
+            self.config["auto_login"] = self.auto_login_var.get()
+
+            # 保存配置到管理器和磁盘
+            self.settings_manager.save_config(self.config)
+            self.settings_manager.save_config_to_disk()
+        
+            # 更新启动时自动启动设置
+            self.apply_auto_start_setting()
+        
+            # 显示已保存配置的消息，并关闭设置窗口
+            messagebox.showinfo("设置", "配置已保存。")
             settings_window.destroy()
-
-        def clear_credentials_wrapper():
-            self.clear_credentials()
+            self.restart_app()
+        else:
+            # 如果用户选择取消，不保存更改，并关闭设置窗口
             settings_window.destroy()
-
-        # 创建清除密钥和用户凭证按钮
-        clear_key_button = tk.Button(
-            settings_window,
-            text="清除密钥和用户凭证",
-            command=clear_key_and_credentials_wrapper,
-        )
-        clear_key_button.grid(row=5, column=0, columnspan=2, pady=10)
-
-        # 创建清除用户凭证按钮
-        clear_credentials_button = tk.Button(
-            settings_window, text="清除用户凭证", command=clear_credentials_wrapper
-        )
-        clear_credentials_button.grid(row=4, column=0, columnspan=2, pady=10)
-
-        settings_window.grid_columnconfigure(1, weight=1)
-
-        def save_settings_and_close(api_url):
-            # 弹出确认对话框，询问用户是否确定要保存设置
-            confirm = messagebox.askyesno("确认保存设置", "您确定要保存这些设置吗？")
-            if confirm:
-                self.config["api_url"] = api_url
-                self.config["auto_start"] = bool(self.auto_start_var.get())
-                self.config["auto_login"] = bool(
-                    self.auto_login_var.get()
-                )  # 更新自动登录的配置
-                self.settings_manager.save_config(self.config)
-                self.settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
-                messagebox.showinfo("设置", "配置已保存。应用将重启以应用更改。")
-                settings_window.destroy()
-                self.apply_auto_start_setting()
-                self.restart_app()
-            else:
-                # 如果用户选择不保存更改，则只关闭确认对话框，不执行后续操作
-                return
-
-        def save_settings_wrapper():
-            save_settings_and_close(api_url_entry.get())
-
-        # 创建保存和取消按钮
-        buttons_frame = tk.Frame(settings_window)
-        buttons_frame.grid(row=3, column=0, columnspan=2, pady=10)
-        tk.Button(buttons_frame, text="保存", command=save_settings_wrapper).pack(
-            side=tk.LEFT, padx=5
-        )
-        tk.Button(
-            buttons_frame,
-            text="取消",
-            command=lambda: self.on_settings_close(settings_window),
-        ).pack(side=tk.RIGHT, padx=5)
-
-        # 将关闭窗口的功能绑定到窗口关闭事件
-        settings_window.protocol(
-            "WM_DELETE_WINDOW", lambda: self.on_settings_close(settings_window)
-        )
+            return
 
     def on_settings_close(self, settings_window):
         settings_window.destroy()  # 关闭设置窗口
