@@ -757,9 +757,9 @@ class CampusNetLoginApp:
             username and password and remember
         ):  # 如果有保存的用户名、密码，并且选择了记住
             self.username_entry.insert(0, username)  # 自动填充到输入框
-            self.password_entry.insert(0, password)
+            self.password_entry.insert(0, password)  # 自动填充到输入框
             self.isp_combobox.set(isp)  # 设置运营商下拉框
-            self.remember_var.set(1)
+            self.remember_var.set(1)  # 设置记住账号和密码的勾选框
 
     def toggle_password_visibility(self):
         """
@@ -782,16 +782,16 @@ class CampusNetLoginApp:
 
     def open_settings(self):
         # 隐藏主窗口以显示设置窗口
-        self.master.withdraw()
-        settings_window = tk.Toplevel(self.master)
-        settings_window.title("设置")
-        settings_window.resizable(False, False)  # 禁止调整窗口大小
+        self.master.withdraw()  # 隐藏主窗口
+        settings_window = tk.Toplevel(self.master)  # 创建设置窗口
+        settings_window.title("设置")  # 设置设置窗口标题为"设置"
+        settings_window.resizable(False, False)  # 设置设置窗口大小不可调整
         self.center_window_on_parent(settings_window, 350, 210)  # 调整设置窗口的大小
         self.minimize_to_tray_var = tk.IntVar(
             value=self.config.get("minimize_to_tray_on_login", True)
-        )
-        self.auto_start_var = tk.IntVar(value=self.config.get("auto_start", False))
-        self.auto_login_var = tk.IntVar(value=self.config.get("auto_login", False))
+        )  # 获取配置中的最小化到托盘变量
+        self.auto_start_var = tk.IntVar(value=self.config.get("auto_start", False))  # 获取配置中的自动启动变量
+        self.auto_login_var = tk.IntVar(value=self.config.get("auto_login", False))  # 获取配置中的自动登录变量
 
         main_frame = ttk.Frame(settings_window)  # 创建主Frame
         main_frame.pack(
@@ -800,45 +800,45 @@ class CampusNetLoginApp:
 
         ttk.Label(main_frame, text="API URL：").grid(
             row=0, column=0, pady=(0, 10), sticky="w"
-        )
-        api_url_entry = ttk.Entry(main_frame)
-        api_url_entry.grid(row=0, column=1, pady=(0, 10), sticky="ew")
+        )  # 创建API URL标签
+        api_url_entry = ttk.Entry(main_frame)  # 创建API URL输入框
+        api_url_entry.grid(row=0, column=1, pady=(0, 10), sticky="ew")  # 设置API URL输入框位置
 
         minimize_to_tray_checkbox = ttk.Checkbutton(
             main_frame,
             text="登录成功后最小化到托盘",
             variable=self.minimize_to_tray_var,
-        )
+        )  # 创建最小化到托盘勾选框
         minimize_to_tray_checkbox.grid(
             row=1, column=0, columnspan=2, pady=(0, 10), sticky="w"
-        )
+        )  # 设置最小化到托盘勾选框位置
 
         auto_start_checkbox = ttk.Checkbutton(
             main_frame, text="开机时自动启动", variable=self.auto_start_var
-        )
+        )  # 创建开机时自动启动勾选框
         auto_start_checkbox.grid(
             row=2, column=0, columnspan=2, pady=(0, 10), sticky="w"
-        )
+        )  # 设置开机时自动启动勾选框位置
 
         auto_login_checkbox = ttk.Checkbutton(
             main_frame, text="自动登录", variable=self.auto_login_var
-        )
+        )  # 创建自动登录勾选框
         auto_login_checkbox.grid(
             row=3, column=0, columnspan=2, pady=(0, 10), sticky="w"
-        )
+        )  # 设置自动登录勾选框位置
 
         clear_key_button = ttk.Button(
             main_frame,
             text="清除密钥和用户凭证",
             command=self.clear_key_and_credentials,
-        )
+        )  # 创建清除密钥和用户凭证按钮
         clear_key_button.grid(
             row=4, column=0, pady=(10, 0), sticky="ew"
         )  # 修改Button的对齐方式
 
         clear_credentials_button = ttk.Button(
             main_frame, text="清除用户凭证", command=self.clear_credentials
-        )
+        )  # 创建清除用户凭证按钮
         clear_credentials_button.grid(
             row=4, column=1, pady=(10, 0), sticky="ew"
         )  # 修改Button的对齐方式
@@ -847,17 +847,17 @@ class CampusNetLoginApp:
 
         # 设置网格内部件之间的距离
         for child in main_frame.winfo_children():
-            child.grid_configure(padx=5, pady=2)
+            child.grid_configure(padx=5, pady=2)  # 设置内部件之间的水平和垂直间距
 
-        # 目前的代码不支持取消操作；这里添加取消按钮和对应的处理函数来增加这个功能
+        # 创建取消按钮
         cancel_button = ttk.Button(
             main_frame,
             text="取消",
             command=lambda: self.on_settings_close(settings_window),
         )
-        cancel_button.grid(row=5, column=1, pady=(10, 0), sticky="e")
+        cancel_button.grid(row=5, column=1, pady=(10, 0), sticky="e")  # 设置取消按钮位置
 
-        # 向保存按钮添加引用传参以便传递参数至处理函数
+        # 创建保存按钮
         save_button = ttk.Button(
             main_frame,
             text="保存",
@@ -865,7 +865,7 @@ class CampusNetLoginApp:
                 api_url_entry.get(), settings_window
             ),
         )
-        save_button.grid(row=5, column=0, pady=(10, 0), sticky="w")
+        save_button.grid(row=5, column=0, pady=(10, 0), sticky="w")  # 设置保存按钮位置
 
         # 默认由弹窗加载时把先前设置的API URL填入Entry
         api_url_entry.insert(0, self.config.get("api_url", ""))
@@ -875,33 +875,33 @@ class CampusNetLoginApp:
             "WM_DELETE_WINDOW", lambda: self.on_settings_close(settings_window)
         )
 
-    def save_settings_and_close(self, api_url, settings_window):
+    def save_settings_and_close(self, api_url, settings_window):  # 保存设置并关闭
         # 弹出确认保存设置对话框
         confirm = messagebox.askyesno("确认保存设置", "您确定要保存这些设置吗？")
-        if confirm:
+        if confirm:  # 如果用户选择确认
             # 更新程序的配置实例
-            self.config["api_url"] = api_url
-            self.config["minimize_to_tray_on_login"] = self.minimize_to_tray_var.get()
-            self.config["auto_start"] = self.auto_start_var.get()
-            self.config["auto_login"] = self.auto_login_var.get()
+            self.config["api_url"] = api_url  # 更新API URL
+            self.config["minimize_to_tray_on_login"] = self.minimize_to_tray_var.get()  # 更新最小化到托盘设置
+            self.config["auto_start"] = self.auto_start_var.get()  # 更新自动启动设置
+            self.config["auto_login"] = self.auto_login_var.get()  # 更新自动登录设置
 
             # 保存配置到管理器和磁盘
-            self.settings_manager.save_config(self.config)
-            self.settings_manager.save_config_to_disk()
+            self.settings_manager.save_config(self.config)  # 保存配置到管理器
+            self.settings_manager.save_config_to_disk()  # 保存配置到磁盘
 
             # 更新启动时自动启动设置
             self.apply_auto_start_setting()
 
             # 显示已保存配置的消息，并关闭设置窗口
-            messagebox.showinfo("设置", "配置已保存。")
-            settings_window.destroy()
-            self.restart_app()
+            messagebox.showinfo("设置", "配置已保存。")  # 弹出信息提示框
+            settings_window.destroy()  # 关闭设置窗口
+            self.restart_app()  # 重启应用程序
         else:
             # 如果用户选择取消，不保存更改，并关闭设置窗口
             settings_window.destroy()
-            return
+            return  # 返回
 
-    def on_settings_close(self, settings_window):
+    def on_settings_close(self, settings_window):  # 设置窗口关闭
         settings_window.destroy()  # 关闭设置窗口
         self.master.deiconify()  # 重新显示主窗口
 
@@ -909,42 +909,42 @@ class CampusNetLoginApp:
         """清除存储的加密密钥，如果找到，则清除用户凭证"""
         confirm = messagebox.askyesno(
             "确认清除", "这将清除所有保存的用户凭证和加密密钥。您确定要继续吗?"
-        )
-        if confirm:
-            key_cleared = False
-            credentials_cleared = False
+        )  # 弹出确认对话框，让用户确认清除操作
+        if confirm:  # 如果用户选择确认
+            key_cleared = False  # 初始化加密密钥清除标志为False
+            credentials_cleared = False  # 初始化用户凭证清除标志为False
 
             # 尝试删除密钥文件
             try:
-                os.remove("encryption_key.key")
-                logging.info("加密密钥已被清除。")
-                key_cleared = True
-            except FileNotFoundError:
-                logging.warning("找不到密钥文件，无法删除。")
+                os.remove("encryption_key.key")  # 删除密钥文件
+                logging.info("加密密钥已被清除。")  # 记录日志，说明加密密钥已被清除
+                key_cleared = True  # 设置加密密钥清除标志为True
+            except FileNotFoundError:  # 如果找不到密钥文件
+                logging.warning("找不到密钥文件，无法删除。")  # 记录警告日志，说明找不到密钥文件
 
             # 尝试删除凭证文件
             try:
-                os.remove("encrypted_credentials.pkl")
-                logging.info("用户凭证已被清除。")
-                credentials_cleared = True
-            except FileNotFoundError:
-                logging.warning("找不到凭证文件，无法删除。")
+                os.remove("encrypted_credentials.pkl")  # 删除凭证文件
+                logging.info("用户凭证已被清除。")  # 记录日志，说明用户凭证已被清除
+                credentials_cleared = True  # 设置用户凭证清除标志为True
+            except FileNotFoundError:  # 如果找不到凭证文件
+                logging.warning("找不到凭证文件，无法删除。")  # 记录警告日志，说明找不到凭证文件
 
             # 根据文件清除的情况给出相应的提示
-            if key_cleared and credentials_cleared:
-                messagebox.showinfo("清除完成", "加密密钥和用户凭证均已被清除。")
-            elif key_cleared:
-                messagebox.showinfo("清除完成", "加密密钥已被清除，未找到用户凭证。")
-            elif credentials_cleared:
-                messagebox.showinfo("清除完成", "用户凭证已被清除，未找到加密密钥。")
-            else:
+            if key_cleared and credentials_cleared:  # 如果加密密钥和用户凭证均已被清除
+                messagebox.showinfo("清除完成", "加密密钥和用户凭证均已被清除。")  # 弹出信息提示框
+            elif key_cleared:  # 如果仅清除了加密密钥
+                messagebox.showinfo("清除完成", "加密密钥已被清除，未找到用户凭证。")  # 弹出信息提示框
+            elif credentials_cleared:  # 如果仅清除了用户凭证
+                messagebox.showinfo("清除完成", "用户凭证已被清除，未找到加密密钥。")  # 弹出信息提示框
+            else:  # 如果加密密钥和用户凭证均未被清除
                 messagebox.showinfo(
                     "清除失败", "未找到加密密钥和用户凭证，无需进行清除。"
-                )
+                )  # 弹出信息提示框
 
             # 如果至少清除了一个文件，则重启应用
             if key_cleared or credentials_cleared:
-                self.restart_app()
+                self.restart_app()  # 重启应用程序
 
     def clear_credentials(self):
         """仅清除存储的用户凭证"""
@@ -952,22 +952,22 @@ class CampusNetLoginApp:
         confirm = messagebox.askyesno(
             "确认清除", "这将清除所有保存的用户凭证。您确定要继续吗？"
         )
-        if confirm:
+        if confirm:  # 如果用户选择确认
             try:
                 # 尝试删除存储用户凭证的文件
-                os.remove("encrypted_credentials.pkl")
+                os.remove("encrypted_credentials.pkl")  # 删除用户凭证文件
                 logging.info("用户凭证已被清除。")  # 记录日志，说明用户凭证已被清除
                 # 弹出信息提示框，告知用户凭证已被清除
                 messagebox.showinfo("清除完成", "所有保存的用户凭证已被清除。")
                 self.restart_app()  # 重新启动应用程序
-            except FileNotFoundError:
+            except FileNotFoundError:  # 如果找不到凭证文件
                 logging.warning(
                     "找不到凭证文件，无法删除。"
                 )  # 记录警告日志，说明找不到凭证文件
                 # 弹出信息提示框，告知用户未找到用户凭证文件，无需清除
                 messagebox.showinfo("清除失败", "没有找到用户凭证文件，无需进行清除。")
 
-    def apply_auto_start_setting(self):
+    def apply_auto_start_setting(self):  # 应用自动启动设置
         start_up_folder = winshell.startup()  # 获取Windows启动文件夹路径
         shortcut_path = os.path.join(
             start_up_folder, "CampusNetLoginApp.lnk"
@@ -978,17 +978,17 @@ class CampusNetLoginApp:
                 script_path = os.path.join(
                     os.getcwd(), "校园网登录程序.exe"
                 )  # 设置可执行文件的路径
-                with winshell.shortcut(shortcut_path) as shortcut:
+                with winshell.shortcut(shortcut_path) as shortcut:  # 创建快捷方式
                     shortcut.path = script_path  # 设置快捷方式的目标路径
                     shortcut.description = "自动登录校园网的应用"  # 设置快捷方式描述
                     shortcut.working_directory = os.getcwd()  # 设置工作目录为当前目录
-        else:
+        else:  # 如果配置中未开启自动启动
             if os.path.exists(shortcut_path):  # 如果快捷方式存在
                 # 删除快捷方式
                 os.remove(shortcut_path)
 
-    def restart_app(self):
-        def restart():
+    def restart_app(self):  # 重启应用程序
+        def restart():  # 重启逻辑
             # 等待一小段时间，确保主进程有足够的时间退出
             time.sleep(1)
             # 使用subprocess启动新的应用实例
@@ -1012,26 +1012,26 @@ class CampusNetLoginApp:
         # 设置子窗口的位置和大小
         child.geometry(f"{width}x{height}+{x}+{y}")  # 设置子窗口的宽度、高度、和位置
 
-    def show_notification(self, title, msg, icon_path=None):
+    def show_notification(self, title, msg, icon_path=None):  # 显示通知
         # 注册窗口类。
-        wc = win32gui.WNDCLASS()
-        wc.hInstance = win32api.GetModuleHandle(None)
-        wc.lpszClassName = "CampusNetLoginAppNotification"
+        wc = win32gui.WNDCLASS()  # 创建WNDCLASS实例
+        wc.hInstance = win32api.GetModuleHandle(None)  # 获取当前实例句柄
+        wc.lpszClassName = "CampusNetLoginAppNotification"  # 设置窗口类名
         wc.lpfnWndProc = {
             win32con.WM_DESTROY: self.on_destroy
         }  # 可以添加更多消息处理。
 
         try:
-            class_atom = win32gui.RegisterClass(wc)
-        except pywintypes.error as e:
+            class_atom = win32gui.RegisterClass(wc)  # 注册窗口类
+        except pywintypes.error as e:  # 捕获Windows API错误
             if "类已存在。" in str(e):
                 # 类已存在，可以继续使用
-                pass
+                pass  # 什么也不做
             else:
                 raise  # 重新抛出其他类型的异常
 
         # 创建窗口。
-        style = win32con.WS_OVERLAPPED | win32con.WS_SYSMENU
+        style = win32con.WS_OVERLAPPED | win32con.WS_SYSMENU  # 设置窗口样式
         self.hwnd = win32gui.CreateWindow(
             "CampusNetLoginAppNotification",
             "CampusNetLoginApp Notification Window",
@@ -1044,8 +1044,8 @@ class CampusNetLoginApp:
             0,
             wc.hInstance,
             None,
-        )
-        win32gui.UpdateWindow(self.hwnd)
+        )  # 创建窗口
+        win32gui.UpdateWindow(self.hwnd)  # 更新窗口
 
         # 显示通知。
         if icon_path and os.path.isfile(
@@ -1055,11 +1055,11 @@ class CampusNetLoginApp:
             hicon = win32gui.LoadImage(
                 None, icon_path, win32con.IMAGE_ICON, 0, 0, icon_flags
             )  # 加载图标
-        else:
+        else:  # 如果没有指定图标路径或文件不存在
             hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)  # 使用默认图标
 
-        flags = win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP
-        nid = (self.hwnd, 0, flags, win32con.WM_USER + 20, hicon, "Tooltip")
+        flags = win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP  # 设置通知图标的标志
+        nid = (self.hwnd, 0, flags, win32con.WM_USER + 20, hicon, "Tooltip")  # 设置通知图标的属性
         win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, nid)  # 添加通知图标
         win32gui.Shell_NotifyIcon(
             win32gui.NIM_MODIFY,
@@ -1076,27 +1076,27 @@ class CampusNetLoginApp:
             ),
         )  # 修改通知为气球提示
         timer = threading.Timer(5.0, self.clear_notification_icon)  # 5秒后执行清理
-        timer.start()
+        timer.start()  # 启动定时器
 
     def clear_notification_icon(self):
         """清理通知图标的方法"""
-        win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, (self.hwnd, 0))
+        win32gui.Shell_NotifyIcon(win32gui.NIM_DELETE, (self.hwnd, 0))  # 删除通知图标
 
     def on_destroy(self, hwnd, msg, wparam, lparam):
         """处理窗口销毁消息"""
-        self.settings_manager.save_config_to_disk()
+        self.settings_manager.save_config_to_disk()  # 保存配置到磁盘
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # 如果当前脚本被直接运行
     # 尝试创建一个互斥锁
-    mutex = win32event.CreateMutex(None, True, "Global\\CampusNetLoginAppMutex")
-    last_error = win32api.GetLastError()
+    mutex = win32event.CreateMutex(None, True, "Global\\CampusNetLoginAppMutex")  # 创建一个互斥锁
+    last_error = win32api.GetLastError()  # 获取最后一个错误
 
-    if last_error == winerror.ERROR_ALREADY_EXISTS:
-        messagebox.showinfo("校园网自动登录", "应用程序已在运行。")
-        sys.exit(0)
-    else:
-        mutex_created = True  # 当前实例拥有互斥锁
+    if last_error == winerror.ERROR_ALREADY_EXISTS:  # 如果互斥锁已经存在
+        messagebox.showinfo("校园网自动登录", "应用程序已在运行。")  # 弹出信息提示框
+        sys.exit(0)  # 退出程序
+    else:  # 如果互斥锁不存在
+        mutex_created = True  # 设置互斥锁创建标志为True
 
     root = tk.Tk()  # 创建一个Tkinter的根窗口对象
     root.withdraw()  # 隐藏根窗口，不显示在屏幕上
@@ -1115,7 +1115,7 @@ if __name__ == "__main__":
     root.mainloop()  # 进入Tkinter的主事件循环，等待用户交互```
 
     # 程序退出时，确保释放资源
-    if mutex_created:
-        win32event.ReleaseMutex(mutex)
-        win32api.CloseHandle(mutex)
-        mutex_created = False
+    if mutex_created:  # 如果互斥锁已经创建
+        win32event.ReleaseMutex(mutex)  # 释放互斥锁
+        win32api.CloseHandle(mutex)  # 关闭互斥锁
+        mutex_created = False  # 重置互斥锁创建标志为False
