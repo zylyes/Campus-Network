@@ -311,29 +311,29 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 "验证失败", "用户名或密码为空，请按要求填写。"
             )  # 显示警告框，提示用户名或密码为空
 
-    @staticmethod
+    @staticmethod  # 静态方法
     def validate_credentials(username, password):
         """验证用户名和密码是否为空"""
         if not username or not password:  # 如果用户名或密码为空
             logging.warning("验证失败：用户名或密码为空")
             # 用户名或密码为空
-            return False
-        return True
+            return False  # 返回False
+        return True  # 返回True
 
-    @staticmethod
+    @staticmethod  # 静态方法
     def decode_base64_message(b64message):
         """解码Base64消息"""
         try:
             return base64.b64decode(b64message).decode(
                 "utf-8"
             )  # 尝试解码Base64消息并以utf-8编码返回
-        except Exception as e:
+        except Exception as e:  # 处理Base64消息解码异常
             logging.error(
                 f"Base64消息解码失败:{e}"
             )  # 记录错误日志，提示Base64消息解码失败
             return None
 
-    @staticmethod
+    @staticmethod  
     def load_login_responses():
         # 假设您的配置文件是一个JSON文件
         config_file_path = "./login_responses.json"
