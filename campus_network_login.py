@@ -1,7 +1,7 @@
 # campus_network_login.py
 # 时间：2024/04/24
 # 作者：周咏霖
-# 版本：V1.3.0
+# 版本：V1.4.0
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
 from tkinter import (
@@ -147,7 +147,7 @@ class CampusNetSettingsManager:
         }
 
     # 程序当前版本
-    CURRENT_VERSION = "1.3.0"
+    CURRENT_VERSION = "1.4.0"
 
     def load_or_create_config(self):
         if self.cached_config:
@@ -423,7 +423,7 @@ class CampusNetLoginApp:
                 logging.info(f"用户 {username} 已经登录")
             elif action == "success":  # 如果操作为登录成功
                 logging.info(f"用户 {username} 登录成功")
-                self.hide_window()  # 隐藏窗口
+                self.master.after(0, self.hide_window)  # 确保在主线程上隐藏窗口
         else:  # 处理各种失败情况
             self.show_error_message("登录失败", message2)  # 显示错误消息
             if action == "show_web1":  # 如果操作为打开网页1
@@ -524,7 +524,7 @@ class CampusNetLoginApp:
                 title="校园网自动登录",
                 menu=pystray.Menu(
                     item("打开", self.show_window, default=True),
-                    item("退出", self.quit_app),
+                    item("退出", lambda icon, item: self.quit_app(icon)),
                 ),
             )
             # 运行托盘图标
@@ -534,18 +534,16 @@ class CampusNetLoginApp:
         threading.Thread(target=setup_system_tray).start()
 
     def quit_app(self, icon, item=None):
-        """安全退出应用程序"""
-        icon.stop()  # 停止图标
+        icon.stop()  # 这在一个单独的线程上停止了图标
 
-        # 安排在主线程中执行的函数
-        def quit_app_main_thread():
-            self.master.quit()  # 结束Tkinter主事件循环
-            self.settings_manager.save_config_to_disk()  # 确保退出前保存配置到磁盘
-            self.master.after(0, self.master.destroy)
+        # 安排在主线程上运行的GUI操作
+        self.master.after(0, self._quit_app_main_thread)
 
-        self.master.after(
-            0, quit_app_main_thread
-        )  # 使用after方法来安排在主线程中执行退出应用的操作
+    def _quit_app_main_thread(self):
+        # 这个方法在主线程上运行，可以安全地与Tkinter交互
+        self.master.quit()  # 退出Tkinter主循环
+        self.settings_manager.save_config_to_disk()  # 保存配置
+        self.master.after(0, self.master.destroy)  # 销毁主窗口
 
     @staticmethod
     def show_error_message(title, message):
