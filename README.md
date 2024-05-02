@@ -92,17 +92,17 @@
 
 ## 版本更新记录：
 
-| 版本号   | 发布日期   | 主要改动                                                                                               | 链接 |
-|:--------:|:------------:|------------------------------------------------------------------------------------------------------|-----|
-| v0.9.0   | 2024-04-13 | 初始版本发布，包括以下功能：<br>  - 提供图形用户界面，支持用户输入和保存登录信息。<br>  - 支持多种网络服务商选择，包括中国电信、中国移动等。<br>  - 实现自动登录功能，用户可以选择是否自动登录。<br>  - 提供系统托盘集成，最小化到系统托盘，方便用户管理。<br>  - 记录应用运行和网络请求的日志，便于问题追踪和调试。 | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V0.9) |
-| v1.0.0   | 2024-04-14 | 新增功能：<br>  - 将程序缩小到托盘功能。<br> 优化：<br>  - 优化界面显示，提升用户体验。<br>  - 改进自动登录机制，提高登录成功率。<br>  - 进行了一些代码结构上的优化，以提高应用性能和可维护性。<br> 修复：<br>  - 修复了一些已知的 Bug，提升了应用的稳定性。                                         | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.0) |
-| v1.1.0   | 2024-04-15 | 新增功能：<br>  - 添加了一部分登录失败后的逻辑，增加了更多失败情况的预案。<br> 优化：<br>  - 进一步优化代码结构，提高应用性能和可维护性。<br> 修复：<br>  - 修复了一些用户反馈的问题，提升了用户体验。                                                | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.1) |
-| v1.2.0   | 2024-04-17 | 新增功能：<br>  - 改变了一些文件的命名方式，使文件夹更简洁明了。                                                                                                      | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.2) |
-| v1.2.1   | 2024-04-20 | 新增功能：<br>  - 将配置文件的部分程序从主类中分离成一个新的配置类`CampusNetSettingsManager`中。<br>  - 增加了代码的复用，对配置保存次数进行了修改，减少了配置写入次数。                                          | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.2.1) |
-| v1.3.0   | 2024-04-24 | 新增功能：<br>  - 添加了安装和卸载功能，方便用户进行后续升级。                                                                                                        | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.3.0) |
-| v1.4.0   | 2024-05-02 | 新增功能：<br>  - 调整了登录返回值的评估，并可通过编辑`login_responses.json`文件来更改登录判断。<br>  - 增加了禁止应用重复启动的功能。<br> 优化：<br>  - 进一步优化代码结构，提高应用性能和可维护性。                                              | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.0) |
-| v1.4.1   | 2024-05-03 | 新增功能：<br>  - 添加了一个选项，可以选择是否要保留系统托盘，并对设置界面进行了美化。                                                                                   | [链接](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.1) |
-| v1.4.2   | 计划中      | 新增功能：<br>  - 调整主界面创建方式，使之能更好地适配各种显示条件。                                                                                                     | [还没有](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.0) |
+| 版本号 | 发布日期  | 更新内容 | 链接 |
+|:------:|:---------:|----------|------|
+| 0.9.0  | 2024-04-13 | 初始版本发布，包括以下功能：<br> - 提供图形用户界面，支持用户输入和保存登录信息。<br>  - 支持多种网络服务商选择，包括中国电信、中国移动等。<br>  - 实现自动登录功能，用户可以选择是否自动登录。<br>  - 提供系统托盘集成，最小化到系统托盘，方便用户管理。<br>  - 记录应用运行和网络请求的日志，便于问题追踪和调试。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V0.9) |
+| 1.0.0  | 2024-04-14 | 新增功能：<br>  - 将程序缩小到托盘功能。<br> 优化：<br>  - 优化界面显示，提升用户体验。<br>  - 改进自动登录机制，提高登录成功率。<br>  - 进行了一些代码结构上的优化，以提高应用性能和可维护性。<br> 修复：<br>  - 修复了一些已知的 Bug，提升了应用的稳定性。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.0) |
+| 1.1.0  | 2024-04-15 | 新增功能：<br>  - 添加了一部分登录失败后的逻辑，增加了更多失败情况的预案。<br> 优化：<br>  - 进一步优化代码结构，提高应用性能和可维护性。<br> 修复：<br>  - 修复了一些用户反馈的问题，提升了用户体验。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.1) |
+| 1.2.0  | 2024-04-17 | 新增功能：<br>  - 改变了一些文件的命名方式，使文件夹更简洁明了。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.2) |
+| 1.2.1  | 2024-04-20 | 新增功能：<br>  - 将配置文件的部分程序从主类中分离成一个新的配置类`CampusNetSettingsManager`中。<br>  - 增加了代码的复用，对配置保存次数进行了修改，减少了配置写入次数。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.2.1) |
+| 1.3.0  | 2024-04-24 | 新增功能：<br>  - 添加了安装和卸载功能，方便用户进行后续升级。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.3.0) |
+| 1.4.0  | 2024-05-02 | 新增功能：<br>  - 调整了登录返回值的评估，并可通过编辑`login_responses.json`文件来更改登录判断。<br>  - 增加了禁止应用重复启动的功能。<br> 优化：<br>  - 进一步优化代码结构，提高应用性能和可维护性。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.0) |
+| 1.4.1  | 2024-05-03 | 新增功能：<br>  - 添加了一个选项，可以选择是否要保留系统托盘，并对设置界面进行了美化。 | [查看](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.1) |
+| 1.4.2  |   计划中   | 新增功能：<br>  - 调整主界面创建方式，使之能更好地适配各种显示条件。 | [待定](https://github.com/zylyes/Campus-Network/releases/tag/V1.4.0) |
 
 ## 未来计划：
 
