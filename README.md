@@ -86,12 +86,14 @@
 - `campus_network_login.py`：主要的脚本文件。
 - `config.json`：用于存储用户配置的文件。
    ```bash
-   {"api_url": "http://172.21.255.105:801/eportal/", 
-   "icons": {
-      "already": "./icons/Internet.ico",
-      "success": "./icons/Check.ico", 
-      "fail": "./icons/Cross.ico", 
-      "unknown": "./icons/Questionmark.ico"
+   config.json文件示例
+   {
+      "api_url": "http://172.21.255.105:801/eportal/", 
+      "icons": {
+         "already": "./icons/Internet.ico",
+         "success": "./icons/Check.ico", 
+         "fail": "./icons/Cross.ico", 
+         "unknown": "./icons/Questionmark.ico"
       }, 
       "auto_login": False, 
       "isp": "campus", 
