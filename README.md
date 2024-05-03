@@ -86,23 +86,23 @@
 - `campus_network_login.py`：主要的脚本文件。
 - `config.json`：用于存储用户配置的文件。
 
-      ```bash
-      config.json文件示例
+   ```bash
+   config.json文件示例
    
-      {
-         "api_url": "http://172.21.255.105:801/eportal/", 
-         "icons": {
-            "already": "./icons/Internet.ico",
-            "success": "./icons/Check.ico", 
-            "fail": "./icons/Cross.ico", 
-            "unknown": "./icons/Questionmark.ico"
-         }, 
-         "auto_login": False, 
-         "isp": "campus", 
-         "auto_start": False, 
-         "minimize_to_tray_on_login": True
-      }
-      ```
+   {
+      "api_url": "http://172.21.255.105:801/eportal/", 
+      "icons": {
+         "already": "./icons/Internet.ico",
+         "success": "./icons/Check.ico", 
+         "fail": "./icons/Cross.ico", 
+         "unknown": "./icons/Questionmark.ico"
+      }, 
+      "auto_login": False, 
+      "isp": "campus", 
+      "auto_start": False, 
+      "minimize_to_tray_on_login": True
+   }
+   ```
 - `encrypted_credentials.pkl`：加密保存用户凭据的文件。
 - `encryption_key.key`：用于加密和解密凭据的密钥文件。
 - `logs`：存放日志文件的目录。
