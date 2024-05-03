@@ -85,8 +85,10 @@
 
 - `campus_network_login.py`：主要的脚本文件。
 - `config.json`：用于存储用户配置的文件。
+
    ```bash
    config.json文件示例
+   
    {
       "api_url": "http://172.21.255.105:801/eportal/", 
       "icons": {
