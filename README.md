@@ -106,6 +106,19 @@
 - `encrypted_credentials.pkl`：加密保存用户凭据的文件。
 - `encryption_key.key`：用于加密和解密凭据的密钥文件。
 - `logs`：存放日志文件的目录。
+- `login_responses.json`：用于存放登录返回值的判断依据
+
+   ```bash
+   login_responses.json文件示例
+
+   "success": {
+        "message1": "登录成功",
+        "message2": "登录成功,欢迎使用校园网",
+        "icon": "success",
+        "action": "success"
+   }
+   ```
+
 - `icons`：存放图标文件的目录。
 
 ## 版本更新记录：
