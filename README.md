@@ -80,6 +80,8 @@
    程序的重启部分使用了这个文件名，如需更换打包后的名字，请连同程序部分一起修改
 
    当然你也可以直接使用释放中打包好的exe
+   
+   ![image](https://github.com/zylyes/Campus-Network/blob/main/images/%E5%AE%89%E8%A3%85%E6%8C%87%E5%8D%97.gif)
 
 ## 项目结构和文件组织
 
