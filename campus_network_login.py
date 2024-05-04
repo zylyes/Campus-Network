@@ -1,7 +1,7 @@
 # campus_network_login.py
-# 时间：2024/05/02
+# 时间：2024/05/04
 # 作者：周咏霖
-# 版本：V1.4.1
+# 版本：V1.4.2
 
 import tkinter as tk  # 导入tkinter库用于GUI界面创建
 from tkinter import (
@@ -145,7 +145,7 @@ class CampusNetSettingsManager:  # 定义一个校园网设置管理器类
         }
 
     # 程序当前版本
-    CURRENT_VERSION = "1.4.1"
+    CURRENT_VERSION = "1.4.2"
 
     def load_or_create_config(self):  # 加载或创建配置
         if self.cached_config:  # 如果缓存配置存在
@@ -155,9 +155,15 @@ class CampusNetSettingsManager:  # 定义一个校园网设置管理器类
 
         with self.config_lock:  # 使用线程锁
             if not os.path.exists(self.config_file):  # 如果配置文件不存在
-                logging.info("配置文件不存在，创建默认配置文件。")  # 记录信息：配置文件不存在，创建默认配置文件
-                with open(self.config_file, "w") as config_file:  # 以写入模式打开配置文件
-                    json.dump(self.default_config, config_file)  # 将默认配置写入配置文件
+                logging.info(
+                    "配置文件不存在，创建默认配置文件。"
+                )  # 记录信息：配置文件不存在，创建默认配置文件
+                with open(
+                    self.config_file, "w"
+                ) as config_file:  # 以写入模式打开配置文件
+                    json.dump(
+                        self.default_config, config_file
+                    )  # 将默认配置写入配置文件
             else:  # 如果配置文件存在
                 logging.info("配置文件加载成功。")  # 记录信息：配置文件加载成功
             with open(self.config_file, "r") as config_file:  # 以只读模式打开配置文件
@@ -250,7 +256,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             "isp": self.isp_var.get(),  # 运营商
             "remember": remember,  # 是否记住密码
         }
-        with open("encrypted_credentials.pkl", "wb") as file:  # 以二进制写入模式打开文件
+        with open(
+            "encrypted_credentials.pkl", "wb"
+        ) as file:  # 以二进制写入模式打开文件
             pickle.dump(credentials, file)  # 将凭据信息序列化保存到文件中
 
         logging.info(
@@ -272,7 +280,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
     def load_credentials(self):  # 加载凭据
         try:
             # 尝试打开名为'encrypted_credentials.pkl'的文件
-            with open("encrypted_credentials.pkl", "rb") as file:  # 以二进制读取模式打开文件
+            with open(
+                "encrypted_credentials.pkl", "rb"
+            ) as file:  # 以二进制读取模式打开文件
                 # 从文件中加载凭据
                 credentials = pickle.load(file)
                 # 获取用户名和解密后的密码
@@ -280,7 +290,12 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 password = self.cipher_suite.decrypt(credentials["password"]).decode()
                 isp = credentials.get("isp", "campus")  # 默认运营商为校园网
                 remember = credentials.get("remember", False)  # 默认不记住密码
-                return username, password, isp, remember  # 返回用户名、密码、运营商和是否记住密码
+                return (
+                    username,
+                    password,
+                    isp,
+                    remember,
+                )  # 返回用户名、密码、运营商和是否记住密码
         except FileNotFoundError:  # 处理文件未找到异常
             # 若文件未找到，则返回空值
             return "", "", "campus", False
@@ -338,7 +353,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 假设您的配置文件是一个JSON文件
         config_file_path = "./login_responses.json"
         try:
-            with open(config_file_path, "r", encoding="utf-8") as file:  # 以只读模式打开配置文件
+            with open(
+                config_file_path, "r", encoding="utf-8"
+            ) as file:  # 以只读模式打开配置文件
                 login_responses = json.load(file)  # 从文件中加载JSON数据
             return login_responses  # 返回加载的JSON数据
         except IOError as e:
@@ -460,7 +477,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
     # 加载登录响应配置
     def perform_login(self, username, password, auto=False):
-        logging.debug(f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}")  # 记录调试信息
+        logging.debug(
+            f"开始登录流程，用户名: {username}, 自动登录: {str(auto)}"
+        )  # 记录调试信息
         # 运营商标识映射
         isp_codes = {
             "中国电信": "@telecom",  # 中国电信
@@ -485,7 +504,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         try:
             # 发送登录请求并将响应存储在名为'response'的变量中
             response = requests.get(sign_parameter, timeout=5).text
-            logging.info(f"登录请求发送成功，响应: {response}")  # 记录信息：登录请求发送成功
+            logging.info(
+                f"登录请求发送成功，响应: {response}"
+            )  # 记录信息：登录请求发送成功
             response_dict = json.loads(
                 response[response.find("{") : response.rfind("}") + 1]
             )  # 解析响应为字典形式
@@ -584,10 +605,14 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             if report_content:  # 如果错误描述不为空
                 # 调用save_error_report方法保存错误报告
                 self.save_error_report(report_content)
-                messagebox.showinfo("报告错误", "您的反馈已提交，谢谢！")  # 弹出信息提示框
+                messagebox.showinfo(
+                    "报告错误", "您的反馈已提交，谢谢！"
+                )  # 弹出信息提示框
                 error_report_window.destroy()  # 销毁报告错误窗口
             else:  # 如果错误描述为空
-                messagebox.showwarning("报告错误", "错误描述不能为空。")  # 弹出警告提示框
+                messagebox.showwarning(
+                    "报告错误", "错误描述不能为空。"
+                )  # 弹出警告提示框
 
         # 添加提交按钮，点击提交按钮时执行submit_report函数
         tk.Button(error_report_window, text="提交", command=submit_report).pack(pady=5)
@@ -664,99 +689,128 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         self.master.geometry(f"{width}x{height}+{x}+{y}")
 
     def setup_ui(self):  # 设置UI
-        self.master.title("校园网自动登录")  # 设置窗口标题为"校园网自动登录"
-        self.center_window(
-            326, 286
-        )  # 调用center_window方法将窗口居中，并设置窗口大小为326x236
+        self.master.title("校园网自动登录")  # 设置窗口标题
+        self.center_window(width=296, height=228)  # 将窗口置于屏幕中央
 
-        ttk.Label(self.master, text="用户名：").grid(
-            row=0, column=0, padx=30, pady=20, sticky="w"
-        )  # 创建用户名标签并设置位置和对齐方式
-        self.username_entry = ttk.Entry(self.master)  # 创建用户名输入框
+        main_frame = ttk.Frame(self.master)  # 创建一个新的框架
+        main_frame.pack(
+            padx=10, pady=10, expand=True, fill=tk.BOTH
+        )  # 将框架放置在窗口中
+
+        ttk.Label(main_frame, text="用户名：", anchor="w").grid(
+            row=0, column=0, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加标签
+        self.username_entry = ttk.Entry(main_frame)  # 创建一个输入框
         self.username_entry.grid(
-            row=0, column=1, padx=3, pady=5, sticky="ew"
-        )  # 设置用户名输入框位置和对齐方式
+            row=0, column=1, padx=5, pady=5, sticky="ew"
+        )  # 将输入框放置在框架中
 
-        ttk.Label(self.master, text="密码：").grid(
-            row=1, column=0, padx=30, pady=0, sticky="w"
-        )  # 创建密码标签并设置位置和对齐方式
-        self.password_entry = ttk.Entry(
-            self.master, show="*"
-        )  # 创建密码输入框，显示为*
+        ttk.Label(main_frame, text="密码：", anchor="w").grid(
+            row=1, column=0, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加标签
+        self.password_entry = ttk.Entry(main_frame, show="*")  # 创建一个密码输入框
         self.password_entry.grid(
-            row=1, column=1, padx=3, pady=5, sticky="ew"
-        )  # 设置密码输入框位置和对齐方式
+            row=1, column=1, padx=5, pady=5, sticky="ew"
+        )  # 将密码输入框放置在框架中
 
-        self.password_strength_label = ttk.Label(
-            self.master, text=""
-        )  # 创建用于显示密码强度的标签
-        self.password_strength_label.grid(
-            row=2, column=1, padx=10, sticky="w"
-        )  # 设置密码强度标签位置
-
-        # 密码可见性切换按钮
         self.toggle_password_btn = tk.Button(
-            self.master,
+            main_frame,
             image=self.eye_closed_icon,
             command=self.toggle_password_visibility,
             borderwidth=0,
-        )  # 创建密码可见性切换按钮
+        )  # 创建一个按钮
         self.toggle_password_btn.grid(
-            row=1, column=2, sticky="e"
-        )  # 设置密码可见性切换按钮位置
+            row=1, column=2, padx=5, pady=5, sticky="w"
+        )  # 将按钮放置在框架中
 
-        self.remember_var = tk.IntVar()  # 创建用于记住账号和密码的变量
+        self.remember_var = tk.IntVar()  # 创建一个整型变量
         ttk.Checkbutton(
-            self.master, text="记住账号和密码", variable=self.remember_var
+            main_frame, text="记住账号和密码", variable=self.remember_var
         ).grid(
-            row=3, column=0, columnspan=1, padx=20, pady=5
-        )  # 创建勾选框
+            row=2, column=0, columnspan=3, padx=5, pady=5, sticky="w"
+        )  # 在框架中添加复选框
 
-        self.isp_var = tk.StringVar()  # 创建用于存储ISP选择的变量
         self.isp_combobox = ttk.Combobox(
-            self.master, textvariable=self.isp_var, state="readonly", width=8
-        )  # 创建ISP选择下拉框
+            main_frame, textvariable=self.isp_var, state="readonly", width=12
+        )  # 创建一个下拉框
         self.isp_combobox["values"] = (
             "中国电信",
             "中国移动",
             "中国联通",
             "校园网",
-        )  # 设置ISP下拉框的选项
-        self.isp_combobox.grid(row=3, column=1, pady=5, sticky="e")  # 设置ISP下拉框位置
+        )  # 设置下拉框的选项
+        self.isp_combobox.grid(
+            row=2, column=1, columnspan=2, padx=5, pady=5, sticky="e"
+        )  # 将下拉框放置在框架中
 
-        # 设置默认值
-        isp_mapping = {
-            "telecom": "中国电信",
-            "cmcc": "中国移动",
-            "unicom": "中国联通",
-            "campus": "校园网",
-        }
-        self.isp_combobox.set(
-            isp_mapping.get(self.config.get("isp", "campus"), "校园网")
-        )  # 设置默认选项为校园网
+        # 登录按钮
+        ttk.Button(main_frame, text="登录", command=self.login).grid(
+            row=3, column=0, columnspan=3, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加按钮
 
-        ttk.Button(self.master, text="登录", command=self.login).grid(
-            row=4, columnspan=3, padx=32, pady=10, sticky="ew"
-        )  # 创建登录按钮
-        ttk.Button(self.master, text="设置", command=self.open_settings).grid(
-            row=5, column=0, columnspan=3, padx=30, pady=10, sticky="ew"
-        )  # 创建设置按钮
-        ttk.Button(self.master, text="报告问题", command=self.report_error).grid(
-            row=6, column=0, padx=30, pady=10, sticky="ew"
-        )  # 创建报告问题按钮
-        ttk.Button(self.master, text="提交建议", command=self.open_suggestion_box).grid(
-            row=6, column=1, padx=6, pady=10, sticky="ew"
-        )  # 创建提交建议按钮
+        # 设置按钮
+        ttk.Button(main_frame, text="设置", command=self.open_settings).grid(
+            row=4, column=0, columnspan=3, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加按钮
 
-        # 自动填充逻辑
-        username, password, isp, remember = self.load_credentials()  # 加载保存的凭据
-        if (
-            username and password and remember
-        ):  # 如果有保存的用户名、密码，并且选择了记住
-            self.username_entry.insert(0, username)  # 自动填充到输入框
-            self.password_entry.insert(0, password)  # 自动填充到输入框
+        # 报告问题和提交建议按钮
+        ttk.Button(main_frame, text="报告问题", command=self.report_error).grid(
+            row=5, column=0, columnspan=1, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加按钮
+        ttk.Button(main_frame, text="提交建议", command=self.open_suggestion_box).grid(
+            row=5, column=1, columnspan=2, padx=5, pady=5, sticky="ew"
+        )  # 在框架中添加按钮
+
+        # 加载保存的用户名和密码，如果设置了记住我
+        username, password, isp, remember = self.load_credentials()  # 加载凭据
+        if username and password and remember:  # 如果用户名和密码存在且记住密码
+            self.username_entry.insert(0, username)  # 在用户名输入框中插入用户名
+            self.password_entry.insert(0, password)  # 在密码输入框中插入密码
             self.isp_combobox.set(isp)  # 设置运营商下拉框
-            self.remember_var.set(1)  # 设置记住账号和密码的勾选框
+            self.remember_var.set(1)  # 设置记住密码复选框为选中状态
+
+        # 配置列权重
+        main_frame.columnconfigure(1, weight=1)  # 第二列应在需要时扩展
+        main_frame.columnconfigure(
+            0, minsize=70
+        )  # 第一列设置最小宽度，确保标签不会被压缩
+
+        self.master.update()  # 更新主窗口，以便下面的代码能获取到最新的尺寸信息
+
+        # 确保报告问题和提交建议按钮相同大小
+        report_button = ttk.Button(
+            main_frame, text="报告问题", command=self.report_error
+        )  # 创建报告问题按钮
+        suggest_button = ttk.Button(
+            main_frame, text="提交建议", command=self.open_suggestion_box
+        )  # 创建提交建议按钮
+        report_button.grid(
+            row=5, column=0, padx=5, pady=5, sticky="ew"
+        )  # 报告问题按钮放置在框架中
+        suggest_button.grid(
+            row=5, column=1, columnspan=2, padx=5, pady=5, sticky="ew"
+        )  # 提交建议按钮放置在框架中
+
+        # 设置按钮让它们在同一行中拥有相同的宽度
+        main_frame.grid_columnconfigure(0, weight=1)  # 报告问题按钮占据列宽
+        main_frame.grid_columnconfigure(1, weight=1)  # 提交建议按钮占据列宽
+        main_frame.grid_columnconfigure(
+            2, weight=1
+        )  # 保持第三列扩展能力，使所有列均匀分配空间
+
+        # 如果窗口过大（比如在高DPI屏幕上），设置合适的窗口尺寸和位置
+        current_width = self.master.winfo_width()  # 获取当前窗口宽度
+        current_height = self.master.winfo_height()  # 获取当前窗口高度
+        screen_width = self.master.winfo_screenwidth()  # 获取屏幕宽度
+        screen_height = self.master.winfo_screenheight()  # 获取屏幕高度
+
+        if current_width > screen_width or current_height > screen_height:
+            # 如果窗口比屏幕尺寸大，重新调整大小
+            scaled_width = int(current_width * 0.9)  # 缩小窗口宽度
+            scaled_height = int(current_height * 0.9)  # 缩小窗口高度
+            self.center_window(
+                width=scaled_width, height=scaled_height
+            )  # 将窗口置于屏幕中央
 
     def toggle_password_visibility(self):
         """
@@ -783,12 +837,16 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         settings_window = tk.Toplevel(self.master)  # 创建设置窗口
         settings_window.title("设置")  # 设置设置窗口标题为"设置"
         settings_window.resizable(False, False)  # 设置设置窗口大小不可调整
-        self.center_window_on_parent(settings_window, 350, 210)  # 调整设置窗口的大小
+        self.center_window_on_parent(settings_window, 300, 212)  # 调整设置窗口的大小
         self.minimize_to_tray_var = tk.IntVar(
             value=self.config.get("minimize_to_tray_on_login", True)
         )  # 获取配置中的最小化到托盘变量
-        self.auto_start_var = tk.IntVar(value=self.config.get("auto_start", False))  # 获取配置中的自动启动变量
-        self.auto_login_var = tk.IntVar(value=self.config.get("auto_login", False))  # 获取配置中的自动登录变量
+        self.auto_start_var = tk.IntVar(
+            value=self.config.get("auto_start", False)
+        )  # 获取配置中的自动启动变量
+        self.auto_login_var = tk.IntVar(
+            value=self.config.get("auto_login", False)
+        )  # 获取配置中的自动登录变量
 
         main_frame = ttk.Frame(settings_window)  # 创建主Frame
         main_frame.pack(
@@ -799,7 +857,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             row=0, column=0, pady=(0, 10), sticky="w"
         )  # 创建API URL标签
         api_url_entry = ttk.Entry(main_frame)  # 创建API URL输入框
-        api_url_entry.grid(row=0, column=1, pady=(0, 10), sticky="ew")  # 设置API URL输入框位置
+        api_url_entry.grid(
+            row=0, column=1, pady=(0, 10), sticky="ew"
+        )  # 设置API URL输入框位置
 
         minimize_to_tray_checkbox = ttk.Checkbutton(
             main_frame,
@@ -852,7 +912,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             text="取消",
             command=lambda: self.on_settings_close(settings_window),
         )
-        cancel_button.grid(row=5, column=1, pady=(10, 0), sticky="e")  # 设置取消按钮位置
+        cancel_button.grid(
+            row=5, column=1, pady=(10, 0), sticky="e"
+        )  # 设置取消按钮位置
 
         # 创建保存按钮
         save_button = ttk.Button(
@@ -878,7 +940,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         if confirm:  # 如果用户选择确认
             # 更新程序的配置实例
             self.config["api_url"] = api_url  # 更新API URL
-            self.config["minimize_to_tray_on_login"] = self.minimize_to_tray_var.get()  # 更新最小化到托盘设置
+            self.config["minimize_to_tray_on_login"] = (
+                self.minimize_to_tray_var.get()
+            )  # 更新最小化到托盘设置
             self.config["auto_start"] = self.auto_start_var.get()  # 更新自动启动设置
             self.config["auto_login"] = self.auto_login_var.get()  # 更新自动登录设置
 
@@ -917,7 +981,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 logging.info("加密密钥已被清除。")  # 记录日志，说明加密密钥已被清除
                 key_cleared = True  # 设置加密密钥清除标志为True
             except FileNotFoundError:  # 如果找不到密钥文件
-                logging.warning("找不到密钥文件，无法删除。")  # 记录警告日志，说明找不到密钥文件
+                logging.warning(
+                    "找不到密钥文件，无法删除。"
+                )  # 记录警告日志，说明找不到密钥文件
 
             # 尝试删除凭证文件
             try:
@@ -925,15 +991,23 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 logging.info("用户凭证已被清除。")  # 记录日志，说明用户凭证已被清除
                 credentials_cleared = True  # 设置用户凭证清除标志为True
             except FileNotFoundError:  # 如果找不到凭证文件
-                logging.warning("找不到凭证文件，无法删除。")  # 记录警告日志，说明找不到凭证文件
+                logging.warning(
+                    "找不到凭证文件，无法删除。"
+                )  # 记录警告日志，说明找不到凭证文件
 
             # 根据文件清除的情况给出相应的提示
             if key_cleared and credentials_cleared:  # 如果加密密钥和用户凭证均已被清除
-                messagebox.showinfo("清除完成", "加密密钥和用户凭证均已被清除。")  # 弹出信息提示框
+                messagebox.showinfo(
+                    "清除完成", "加密密钥和用户凭证均已被清除。"
+                )  # 弹出信息提示框
             elif key_cleared:  # 如果仅清除了加密密钥
-                messagebox.showinfo("清除完成", "加密密钥已被清除，未找到用户凭证。")  # 弹出信息提示框
+                messagebox.showinfo(
+                    "清除完成", "加密密钥已被清除，未找到用户凭证。"
+                )  # 弹出信息提示框
             elif credentials_cleared:  # 如果仅清除了用户凭证
-                messagebox.showinfo("清除完成", "用户凭证已被清除，未找到加密密钥。")  # 弹出信息提示框
+                messagebox.showinfo(
+                    "清除完成", "用户凭证已被清除，未找到加密密钥。"
+                )  # 弹出信息提示框
             else:  # 如果加密密钥和用户凭证均未被清除
                 messagebox.showinfo(
                     "清除失败", "未找到加密密钥和用户凭证，无需进行清除。"
@@ -1055,8 +1129,17 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         else:  # 如果没有指定图标路径或文件不存在
             hicon = win32gui.LoadIcon(0, win32con.IDI_APPLICATION)  # 使用默认图标
 
-        flags = win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP  # 设置通知图标的标志
-        nid = (self.hwnd, 0, flags, win32con.WM_USER + 20, hicon, "Tooltip")  # 设置通知图标的属性
+        flags = (
+            win32gui.NIF_ICON | win32gui.NIF_MESSAGE | win32gui.NIF_TIP
+        )  # 设置通知图标的标志
+        nid = (
+            self.hwnd,
+            0,
+            flags,
+            win32con.WM_USER + 20,
+            hicon,
+            "Tooltip",
+        )  # 设置通知图标的属性
         win32gui.Shell_NotifyIcon(win32gui.NIM_ADD, nid)  # 添加通知图标
         win32gui.Shell_NotifyIcon(
             win32gui.NIM_MODIFY,
@@ -1086,7 +1169,9 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
 if __name__ == "__main__":  # 如果当前脚本被直接运行
     # 尝试创建一个互斥锁
-    mutex = win32event.CreateMutex(None, True, "Global\\CampusNetLoginAppMutex")  # 创建一个互斥锁
+    mutex = win32event.CreateMutex(
+        None, True, "Global\\CampusNetLoginAppMutex"
+    )  # 创建一个互斥锁
     last_error = win32api.GetLastError()  # 获取最后一个错误
 
     if last_error == winerror.ERROR_ALREADY_EXISTS:  # 如果互斥锁已经存在
