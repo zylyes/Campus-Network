@@ -1,5 +1,5 @@
 # campus_network_login.py
-# 时间：2024/05/04
+# 时间：2024/05/08
 # 作者：周咏霖
 # 版本：V1.4.2
 
@@ -107,7 +107,7 @@ def setup_logging():
     )  # 将PIL的日志级别设置为INFO，这样就不会显示DEBUG消息
 
 
-def on_main_close(root, settings_manager):
+def on_main_close(root, settings_manager):  # 主窗口关闭事件处理函数
     global mutex, mutex_created  # 声明全局变量mutex和mutex_created
     if messagebox.askokcancel(
         "退出", "确定要退出应用吗？"
@@ -121,6 +121,7 @@ def on_main_close(root, settings_manager):
 
 
 setup_logging()  # 调用日志设置函数
+
 
 config_lock = threading.Lock()  # 创建一个线程锁
 
@@ -331,7 +332,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         """验证用户名和密码是否为空"""
         if not username or not password:  # 如果用户名或密码为空
             logging.warning("验证失败：用户名或密码为空")
-            # 用户名或密码为空
+            # 记录警告信息：用户名或密码为空
             return False  # 返回False
         return True  # 返回True
 
@@ -350,8 +351,8 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
     @staticmethod  # 静态方法
     def load_login_responses():
-        # 假设您的配置文件是一个JSON文件
-        config_file_path = "./login_responses.json"
+        # 加载登录响应配置
+        config_file_path = "./login_responses.json"  # 配置文件路径
         try:
             with open(
                 config_file_path, "r", encoding="utf-8"
@@ -375,7 +376,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         msg = response_dict.get("msg")  # 获取响应中的消息
 
         # 根据结果和返回码确定结果
-        outcome = ""
+        outcome = ""  # 初始化结果
         if result == "1":  # 如果结果为"1"，表示成功
             outcome = "success"  # 结果为成功
         elif result == "0" and ret_code == 2:  # 如果结果为"0"且返回码为2,表示已经登录
@@ -384,8 +385,8 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             decode_msg = self.decode_base64_message(msg)  # 解码消息
             outcome = decode_msg  # 结果为解码后的消息
         else:
-            # 记录无法解码的返回值
-            logging.error(f"无法解码消息：{msg}")
+            # 未知登录错误
+            logging.error(f"未知登录错误：{response_dict}")
             # 打开网页提示用户重新登录
             self.master.after(0, lambda: webbrowser.open("http://172.21.255.105/"))
             # 尝试打开常见问题文档
@@ -396,7 +397,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 0,
                 lambda: self.show_notification(
                     "登录失败",
-                    "无法解码消息，请去报告错误界面提交错误提示后重新尝试",
+                    "未知登录错误，请去报告错误界面提交错误提示后重新尝试",
                     self.config["icons"]["unknown"],
                 ),
             )  # 显示通知
@@ -418,6 +419,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             )
             icon = "unknown"  # 获取图标
             action = "unknown error"  # 获取操作
+
         self.execute_response_action(
             outcome, message1, message2, icon, action, username, password, remember
         )  # 执行响应的操作
@@ -430,7 +432,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             message1, "校园网状态", self.config["icons"][icon]
         )  # 显示通知
         if action == "already_logged_in" or action == "success":  # 用户已经登录的处理
-            if remember:
+            if remember:  # 如果记住密码
                 # 保存凭据
                 self.master.after(
                     0, lambda: self.save_credentials(username, password, remember)
@@ -511,7 +513,6 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 response[response.find("{") : response.rfind("}") + 1]
             )  # 解析响应为字典形式
 
-            # 根据response_dict处理登录结果
             self.handle_login_result(
                 response_dict, username, password, remember
             )  # 处理登录结果的函数调用
@@ -530,7 +531,7 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
     def show_window(self, icon=None, item=None):
         """从托盘恢复窗口"""
-        if icon:
+        if icon:  # 如果提供了icon参数
             icon.stop()  # 停止托盘图标
         self.master.deiconify()  # 显示窗口
         self.setup_ui()  # 重新设置或刷新UI界面
@@ -549,29 +550,23 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
                 icon=icon_image,  # 托盘图标的图像
                 title="校园网自动登录",  # 托盘图标的标题
                 menu=pystray.Menu(
-                    item("打开", self.show_window, default=True),  # 打开菜单项
-                    item("退出", lambda icon, item: self.quit_app(icon)),  # 退出菜单项
-                ),
+                    item("打开", self.show_window, default=True),
+                    item("退出", lambda icon, item: self.quit_app(icon)),
+                ),  # 托盘图标的菜单
             )
             # 运行托盘图标
-            self.icon.run_detached()  # 使用run_detached代替run以避免阻塞主线程
+            self.icon.run_detached()
 
         # 在后台线程中设置系统托盘，防止阻塞主线程
         threading.Thread(target=setup_system_tray).start()
 
     def quit_app(self, icon=None, item=None):  # 退出应用
-        if icon:
-            icon.stop()  # 如果提供了icon，则执行与系统托盘相关的逻辑
+        if icon:  # 如果提供了icon参数
+            icon.stop()  # 停止托盘图标
         # 保存配置，清理资源，退出程序的其余步骤
         self.master.quit()
         # 可能有必要的清理步骤
         self.master.destroy()
-
-    def _quit_app_main_thread(self):  # 退出应用的主线程
-        # 在主线程上运行，可以安全地与Tkinter交互
-        self.master.quit()  # 退出Tkinter主循环
-        self.settings_manager.save_config_to_disk()  # 保存配置
-        self.master.after(0, self.master.destroy)  # 销毁主窗口
 
     @staticmethod  # 静态方法
     def show_error_message(title, message):
@@ -777,7 +772,6 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
 
         self.master.update()  # 更新主窗口，以便下面的代码能获取到最新的尺寸信息
 
-        # 确保报告问题和提交建议按钮相同大小
         report_button = ttk.Button(
             main_frame, text="报告问题", command=self.report_error
         )  # 创建报告问题按钮
@@ -1083,14 +1077,14 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
         # 设置子窗口的位置和大小
         child.geometry(f"{width}x{height}+{x}+{y}")  # 设置子窗口的宽度、高度、和位置
 
-    def show_notification(self, title, msg, icon_path=None):  # 显示通知
-        # 注册窗口类。
+    def show_notification(self, title, msg, icon_path=None):
+        """显示通知的方法"""
         wc = win32gui.WNDCLASS()  # 创建WNDCLASS实例
         wc.hInstance = win32api.GetModuleHandle(None)  # 获取当前实例句柄
         wc.lpszClassName = "CampusNetLoginAppNotification"  # 设置窗口类名
         wc.lpfnWndProc = {
             win32con.WM_DESTROY: self.on_destroy
-        }  # 可以添加更多消息处理。
+        }  # 设置窗口消息处理函数，处理销毁消息
 
         try:
             class_atom = win32gui.RegisterClass(wc)  # 注册窗口类
@@ -1101,7 +1095,6 @@ class CampusNetLoginApp:  # 定义一个校园网登录应用类
             else:
                 raise  # 重新抛出其他类型的异常
 
-        # 创建窗口。
         style = win32con.WS_OVERLAPPED | win32con.WS_SYSMENU  # 设置窗口样式
         self.hwnd = win32gui.CreateWindow(
             "CampusNetLoginAppNotification",
