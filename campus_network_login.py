@@ -3,39 +3,39 @@
 # 作者：周咏霖
 # 版本：V1.4.2
 
-import tkinter as tk  # 导入tkinter库用于GUI界面创建
+import tkinter as tk  # 导入tkinter库，用于GUI界面创建
 from tkinter import (
     messagebox,
     ttk,
 )  # 从tkinter导入messagebox和ttk，用于图形界面中的对话框和高级组件
-import requests  # 导入requests库用于处理HTTP请求
-import os  # 导入os库用于处理操作系统级别的接口，如文件管理
-import json  # 导入json库用于处理JSON数据格式
-from cryptography.fernet import Fernet  # 从cryptography库导入Fernet用于加密
-import pickle  # 导入pickle库用于对象的序列化和反序列化
-import logging  # 导入logging库用于记录日志
+import requests  # 导入requests库，用于处理HTTP请求
+import os  # 导入os库，用于处理操作系统级别的接口，如文件管理
+import json  # 导入json库，用于处理JSON数据格式
+from cryptography.fernet import Fernet  # 从cryptography库导入Fernet，用于加密
+import pickle  # 导入pickle库，用于对象的序列化和反序列化
+import logging  # 导入logging库，用于记录日志
 from logging.handlers import (
     TimedRotatingFileHandler,
 )  # 从logging.handlers导入TimedRotatingFileHandler，用于按时间轮转记录日志到文件
-import subprocess  # 导入subprocess库用于调用外部进程
-import socket  # 导入socket库用于网络通信
-import threading  # 导入threading库用于多线程编程
-import time  # 导入time库用于时间操作
-import win32api  # 导入win32api库用于Windows API操作
-import win32con  # 导入win32con库用于Windows常量定义
-import win32gui  # 导入win32gui库用于Windows GUI操作
-import base64  # 导入base64库用于编码和解码base64数据
-import webbrowser  # 导入webbrowser用于在浏览器中打开URL
+import subprocess  # 导入subprocess库，用于调用外部进程
+import socket  # 导入socket库，用于网络通信
+import threading  # 导入threading库，用于多线程编程
+import time  # 导入time库，用于时间操作
+import win32api  # 导入win32api库，用于Windows API操作
+import win32con  # 导入win32con库，用于Windows常量定义
+import win32gui  # 导入win32gui库，用于Windows GUI操作
+import base64  # 导入base64库，用于编码和解码base64数据
+import webbrowser  # 导入webbrowser，用于在浏览器中打开URL
 import winshell  # 导入winshell库用于Windows快捷方式操作
-import pywintypes  # 确保导入pywintypes
-import urllib.parse  # 导入urllib.parse模块
-import pystray  # 导入pystray库
-from pystray import MenuItem as item  # 从pystray库中导入MenuItem类并将其重命名为item
-from PIL import Image  # 导入PIL库中的Image类
-from packaging import version  # 导入packaging库
-import win32event  # 导入win32event模块
-import winerror  # 导入winerror模块
-import sys  # 导入sys库
+import pywintypes  # 导入pywintypes库，用于Windows API操作
+import urllib.parse  # 导入urllib库，用于URL编码
+import pystray  # 导入pystray库，用于系统托盘图标
+from pystray import MenuItem as item  # 从pystray库中导入MenuItem类并将其重命名为item，用于托盘菜单
+from PIL import Image  # 导入PIL库中的Image类，用于图像处理
+from packaging import version  # 导入packaging库，用于版本号比较
+import win32event  # 导入win32event模块，用于Windows事件操作
+import winerror  # 导入winerror模块，用于Windows错误码
+import sys  # 导入sys库，用于系统相关的操作
 
 
 global mutex  # 声明全局变量mutex
