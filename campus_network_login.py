@@ -38,10 +38,45 @@ import winerror  # 导入winerror模块，用于Windows错误码
 import sys  # 导入sys库，用于系统相关的操作
 
 
-global mutex  # 声明全局变量mutex
-global mutex_created  # 声明全局变量mutex_created
-mutex = None  # 初始化全局变量mutex
-mutex_created = False  # 初始化全局变量mutex_created
+# 互斥锁管理类
+class AppMutex:
+    _instance = None
+    
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls.mutex = None
+            cls.mutex_created = False
+        return cls._instance
+    
+    def create(self):
+        try:
+            # 正确传递三个参数
+            self.mutex = win32event.CreateMutex(
+                None,           # 安全属性
+                True,           # 立即拥有
+                "Global\\CampusNetLoginAppMutex"  # 唯一名称
+            )
+            last_error = win32api.GetLastError()
+            
+            if last_error == winerror.ERROR_ALREADY_EXISTS:
+                print("程序已在运行")
+                self.cleanup()
+                sys.exit(0)
+            else:
+                self.mutex_created = True
+                print("互斥锁创建成功")
+                
+        except Exception as e:
+            print(f"创建互斥锁失败: {str(e)}")
+            sys.exit(1)
+    
+    def cleanup(self):
+        if self.mutex_created and self.mutex:
+            win32event.ReleaseMutex(self.mutex)
+            win32api.CloseHandle(self.mutex)
+            self.mutex_created = False
+            print("互斥锁已释放")
 
 
 # 定义一个自定义的日志过滤器类PasswordFilter
