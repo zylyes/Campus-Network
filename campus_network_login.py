@@ -67,9 +67,12 @@ class AppMutex:
                 self.mutex_created = True
                 print("互斥锁创建成功")
                 
-        except Exception as e:
-            print(f"创建互斥锁失败: {str(e)}")
-            sys.exit(1)
+        except pywintypes.error as e:
+            if e.winerror == winerror.ERROR_ACCESS_DENIED:
+                logging.error("权限不足，无法创建互斥锁")
+            else:
+                logging.error(f"系统错误: {e.strerror} (代码 {e.winerror})")
+
     
     def cleanup(self):
         if self.mutex_created and self.mutex:
